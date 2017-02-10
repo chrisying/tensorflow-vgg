@@ -85,6 +85,7 @@ def main():
     with open(os.path.join(VOT_DIR, 'list.txt')) as list_txt:
         for cat in list_txt.xreadlines():
             cat = cat.strip()
+            print 'Begin processing %s' % cat
             cat_dir = os.path.join(VOT_DIR, cat)
             ground_truth = open(os.path.join(cat_dir, 'groundtruth.txt')).readlines()
             num_frames = len(ground_truth)
@@ -96,6 +97,7 @@ def main():
             new_gt = open(os.path.join(output_dir, 'groundtruth.txt'), 'w')
 
             for block_idx in range(num_frames / KEY_FRAME_GAP):
+                print 'Begin processing key frame %s' % block_idx
                 # Process key frame
                 key_frame_idx = block_idx * KEY_FRAME_GAP + 1
                 key_frame_name = str(key_frame_idx).zfill(8)
@@ -130,7 +132,6 @@ def main():
                     offset_y = (sy + sh/2) - (y + h/2)
                     new_gt.write('search-%s: %.3f %.3f\n' %
                             (search_frame_name, offset_x, offset_y))
-
 
             new_gt.close()
 
