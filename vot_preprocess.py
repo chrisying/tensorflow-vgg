@@ -7,6 +7,14 @@ Preprocess images in VOT2016 by:
         - Crop
         - Resize
     - Take remaining MAX_FRAME_GAP-1 images and process to SEARCH_FRAME_SIZE
+
+New ground truth format:
+    key-00000001: [top-left x] [top-left y] [width] [height]
+    search-00000002: [x offset] [y offset]
+    ...
+    search-[MAX_FRAME_GAP+1]: [x offset] [y offset]
+    key-00000002: [top-left x] [top-left y] [width] [height]
+    ...
 '''
 
 import math
@@ -78,27 +86,53 @@ def main():
         for cat in list_txt.xreadlines():
             cat = cat.strip()
             cat_dir = os.path.join(VOT_DIR, cat)
-            num_frames = len(open(os.path.join(cat_dir, 'groundtruth.txt')).readlines())
-            with open(os.path.join(cat_dir, 'groundtruth.txt')) as gt:
-                for block_idx in range(num_frames / MAX_FRAME_GAP):
-                    # Process key frame
-                    key_frame_name = str(block_idx * MAX_FRAME_GAP + 1).zfill(8)
-                    key_im = Image.open(os.path.join(cat_dir, key_frame_name + '.jpg'))
-                    x, y, w, h = convert_to_xywh(gt.readline())
-                    new_key_im, scale = extract_key_frame(key_im, x, y, w, h)
-                    key_output_name = '%s-%s-key.png' % (cat, key_frame_name)
-                    new_key_im.save(os.path.join(PROCESSED_DIR, key_output_name))
+            ground_truth = open(os.path.join(cat_dir, 'groundtruth.txt')).readlines()
+            num_frames = len(ground_truth)
 
-                    # Process search frames
-                    for img_idx in range(1, MAX_FRAME_GAP):
-                        search_frame_name = str(block_idx * MAX_FRAME_GAP + img_idx + 1).zfill(8)
-                        search_im = Image.open(os.path.join(cat_dir, search_frame_name + '.jpg'))
-                        new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
-                        search_output_name = '%s-%s-search.png' % (cat, search_frame_name)
-                        new_search_im.save(os.path.join(PROCESSED_DIR, search_output_name))
+            output_dir = os.path.join(PROCESSED_DIR, cat)
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)     # Theoretically a race condition
 
-                        # TODO: write down ground truth somewhere (maybe in terms of offset?)
-                        gt.readline()
+            new_gt = open(os.path.join(output_dir, 'groundtruth.txt'), 'w')
+
+            for block_idx in range(num_frames / KEY_FRAME_GAP):
+                # Process key frame
+                key_frame_idx = block_idx * KEY_FRAME_GAP + 1
+                key_frame_name = str(key_frame_idx).zfill(8)
+
+                key_dir = os.path.join(output_dir, 'key-%s' % key_frame_name)
+                if not os.path.exists(key_dir):
+                    os.makedirs(key_dir)
+
+                key_im = Image.open(os.path.join(cat_dir, key_frame_name + '.jpg'))
+                x, y, w, h = convert_to_xywh(ground_truth[key_frame_idx - 1])
+                new_key_im, scale = extract_key_frame(key_im, x, y, w, h)
+                key_output_name = 'key-%s.png' % key_frame_name
+                new_key_im.save(os.path.join(key_dir, key_output_name))
+
+                new_gt.write('key-%s: %.3f %.3f %.3f %.3f\n' %
+                        (key_frame_name, x, y, w, h))
+
+
+                # Process search frames
+                for img_idx in range(MAX_FRAME_GAP):
+                    search_frame_idx = key_frame_idx + img_idx + 1
+                    if search_frame_idx > num_frames:
+                        break
+                    search_frame_name = str(search_frame_idx).zfill(8)
+                    search_im = Image.open(os.path.join(cat_dir, search_frame_name + '.jpg'))
+                    new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
+                    search_output_name = 'search-%s.png' % (search_frame_name)
+                    new_search_im.save(os.path.join(key_dir, search_output_name))
+
+                    sx, sy, sw, sh = convert_to_xywh(ground_truth[search_frame_idx - 1])
+                    offset_x = (sx + sw/2) - (x + w/2)
+                    offset_y = (sy + sh/2) - (y + h/2)
+                    new_gt.write('search-%s: %.3f %.3f\n' %
+                            (search_frame_name, offset_x, offset_y))
+
+
+            new_gt.close()
 
 if __name__ == '__main__':
     main()
