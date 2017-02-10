@@ -9,12 +9,15 @@ Preprocess images in VOT2016 by:
     - Take remaining MAX_FRAME_GAP-1 images and process to SEARCH_FRAME_SIZE
 
 New ground truth format:
-    key-00000001: [top-left x] [top-left y] [width] [height]
+    key-00000001: [top-left x] [top-left y] [width] [height] [scale]
     search-00000002: [x offset] [y offset]
     ...
     search-[MAX_FRAME_GAP+1]: [x offset] [y offset]
-    key-00000002: [top-left x] [top-left y] [width] [height]
+    key-00000002: [top-left x] [top-left y] [width] [height] [scale]
     ...
+
+original image size * scale = key/search image size
+x/y offsets are in original image dimensions
 '''
 
 import math
@@ -56,13 +59,13 @@ def extract_key_frame(im, x, y, w, h):
     im = im.resize((KEY_FRAME_SIZE, KEY_FRAME_SIZE), resample=Image.BILINEAR)
 
     # Also returns the scale factor
-    return im, key_size / KEY_FRAME_SIZE
+    return im, KEY_FRAME_SIZE / key_size
 
 def extract_search_frame(im, x, y, w, h, scale):
     # x, y, w, h is from the KEY frame
     im_w, im_h = im.size
 
-    search_size = scale * SEARCH_FRAME_SIZE
+    search_size = SEARCH_FRAME_SIZE / scale
     new_x = x + w/2 - search_size / 2
     new_y = y + h/2 - search_size / 2
 
@@ -112,8 +115,8 @@ def main():
                 key_output_name = 'key-%s.png' % key_frame_name
                 new_key_im.save(os.path.join(key_dir, key_output_name))
 
-                new_gt.write('key-%s: %.3f %.3f %.3f %.3f\n' %
-                        (key_frame_name, x, y, w, h))
+                new_gt.write('key-%s: %.3f %.3f %.3f %.3f %.3f\n' %
+                        (key_frame_name, x, y, w, h, scale))
 
 
                 # Process search frames
