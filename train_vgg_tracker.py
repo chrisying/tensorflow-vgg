@@ -43,7 +43,8 @@ def save_corr_map(corr_map, filename):
     im = Image.fromarray(np.uint8(corr_map * 255))
     im.save(filename)
 
-with tf.device('/cpu:0'):
+def main():
+#with tf.device('/cpu:0'):
     sess = tf.Session()
 
     key_image = tf.placeholder(tf.float32, [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
@@ -61,11 +62,11 @@ with tf.device('/cpu:0'):
     [cm1, cm2, cm3, cm4, cm5] = sess.run(
             [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
             feed_dict={key_image: key, search_image: search})
-    save_corr_map(corr_map1, 'corr_map1.png')
-    save_corr_map(corr_map2, 'corr_map2.png')
-    save_corr_map(corr_map3, 'corr_map3.png')
-    save_corr_map(corr_map4, 'corr_map4.png')
-    save_corr_map(corr_map5, 'corr_map5.png')
+    save_corr_map(cm1, 'corr_map1.png')
+    save_corr_map(cm2, 'corr_map2.png')
+    save_corr_map(cm3, 'corr_map3.png')
+    save_corr_map(cm4, 'corr_map4.png')
+    save_corr_map(cm5, 'corr_map5.png')
 
     ## simple 1-step training
     #cost = tf.reduce_sum((vgg.prob - true_out) ** 2)
@@ -78,3 +79,6 @@ with tf.device('/cpu:0'):
 
     ## test save
     #vgg.save_npy(sess, './test-save.npy')
+
+if __name__ == '__main__':
+    main()
