@@ -14,6 +14,28 @@ from CONSTANTS import *
 key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'key-00000091.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
 search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
 
+def load_batch(category, key_frame):
+    data_dir = os.path.join(PROCESSED_DIR, category, key_frame)
+    key_frame = Image.open(os.path.join(data_dir, key_frame + '.png'))
+    key_data = np.array(key_frame).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
+
+    with open(os.path.join(data_dir, 'groundtruth.txt')) as f:
+        key_line = f.readline()
+        assert key_line[:12] == key_frame
+        x, y, w, h, s = map(float, key_line[14:].split())  # Unused right now
+        s_idx = 0
+        search_batch = np.zeros([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
+        for line in f.xreadlines():
+            search_name = line[:15]
+            search_frame = Image.open(os.path.join(data_dir, search_name))
+            search_batch[s_idx, :, :, :] = np.array(search_frame).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
+
+            offset_x, offset_y = map(float, search_line[17:].split())
+            # TODO: create ground truth here
+
+    return key_data, search_batch
+
+
 def save_corr_map(corr_map, filename):
     corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
     corr_map = (corr_map - np.min(corr_map))

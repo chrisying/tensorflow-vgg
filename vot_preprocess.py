@@ -97,8 +97,6 @@ def main():
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)     # Theoretically a race condition
 
-            new_gt = open(os.path.join(output_dir, 'groundtruth.txt'), 'w')
-
             for block_idx in range(num_frames / KEY_FRAME_GAP):
                 print 'Begin processing key frame %s' % block_idx
                 # Process key frame
@@ -115,6 +113,7 @@ def main():
                 key_output_name = 'key-%s.png' % key_frame_name
                 new_key_im.save(os.path.join(key_dir, key_output_name))
 
+                new_gt = open(os.path.join(key_dir, 'groundtruth.txt'), 'w')
                 new_gt.write('key-%s: %.3f %.3f %.3f %.3f %.3f\n' %
                         (key_frame_name, x, y, w, h, scale))
 
@@ -136,7 +135,7 @@ def main():
                     new_gt.write('search-%s: %.3f %.3f\n' %
                             (search_frame_name, offset_x, offset_y))
 
-            new_gt.close()
+                new_gt.close()
 
 if __name__ == '__main__':
     main()
