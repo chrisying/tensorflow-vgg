@@ -146,42 +146,28 @@ class Vgg19:
             return bias
 
     def get_conv_var(self, filter_size, in_channels, out_channels, name):
-        #initial_value = tf.truncated_normal([filter_size, filter_size, in_channels, out_channels], 0.0, 0.001)
-        #filters = self.get_var(initial_value, name, 0, name + "_filters")
-
-        #initial_value = tf.truncated_normal([out_channels], .0, .001)
-        #biases = self.get_var(initial_value, name, 1, name + "_biases")
         filters = self.get_var(name, [filter_size, filter_size, in_channels, out_channels], 0, name + "_filters")
         biases = self.get_var(name, [out_channels], 1, name + "_biases")
 
         return filters, biases
 
-#    def get_var(self, initial_value, name, idx, var_name):
-#        if self.data_dict is not None and name in self.data_dict:
-#            value = self.data_dict[name][idx]
-#        else:
-#            value = initial_value
-#
-#        var = tf.Variable(value, name=var_name)
-#
-#        self.var_dict[(name, idx)] = var
-#
-#        # print var_name, var.get_shape().as_list()
-#        assert var.get_shape() == initial_value.get_shape()
-#
-#        return var
-
     def get_var(self, name, shape, idx, var_name):
-        if self.data_dict is not None and name in self.data_dict:
-            init = tf.constant_initializer(self.data_dict[name][idx])
-        else:
-            init = tf.truncated_normal(shape, 0.0, 0.001)
-            print '[WARNING] Variable with no initial value: %s' % var_name
+        try:
+            if self.data_dict is not None and name in self.data_dict:
+                init = tf.constant_initializer(self.data_dict[name][idx])
+                var = tf.get_variable(var_name, shape=shape, initializer=init)
+                print 'Loaded Variable %s in %s from file' % (var_name, tf.get_variable_scope().name)
+            else:
+                init = tf.truncated_normal_initializer(shape, 0.0, 0.001)
+                var = tf.get_variable(var_name, shape=shape, initializer=init)
+                print 'Initialized Variable %s in %s' % (var_name, tf.get_variable_scope().name)
+        except ValueError:
+            with tf.variable_scope(tf.get_variable_scope(), reuse=True):
+                var = tf.get_variable(var_name)
+                print 'Reused variable %s in %s' % (var_name, tf.get_variable_scope().name) 
 
-        var = tf.get_variable(var_name, shape=shape, initializer=init)
         self.var_dict[(name, idx)] = var
         return var
-
 
     def save_npy(self, sess, npy_path="./vgg19-save.npy"):
         assert isinstance(sess, tf.Session)
