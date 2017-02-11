@@ -11,19 +11,19 @@ from PIL import Image
 import vgg19_tracker as vgg19
 from CONSTANTS import *
 
-#img1 = utils.load_image("./test_data/tiger.jpeg")
-#img1_true_result = [1 if i == 292 else 0 for i in xrange(1000)]  # 1-hot result for tiger
-#
-#batch1 = img1.reshape((1, 224, 224, 3))
-key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000001', 'key-00000001.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
-search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000001', 'search-00000060.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
+key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'key-00000091.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
+search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
+
+def save_corr_map(corr_map, filename):
+    corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
+    corr_map = (corr_map - np.min(corr_map))
+    corr_map = corr_map / (np.max(corr_map) + 0.0001)
+    im = Image.fromarray(np.uint8(corr_map * 255))
+    im.save(filename)
 
 with tf.device('/cpu:0'):
     sess = tf.Session()
 
-    #images = tf.placeholder(tf.float32, [1, 224, 224, 3])
-    #true_out = tf.placeholder(tf.float32, [1, 1000])
-    #train_mode = tf.placeholder(tf.bool)
     key_image = tf.placeholder(tf.float32, [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
     search_image = tf.placeholder(tf.float32, [None, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
 
@@ -36,13 +36,14 @@ with tf.device('/cpu:0'):
     sess.run(tf.initialize_all_variables())
 
     # test classification
-    corr_map = sess.run(vgg.cross_corr5, feed_dict={key_image: key, search_image: search})
-    corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
-    corr_map = (corr_map - np.min(corr_map))
-    corr_map = corr_map / (np.max(corr_map) + 0.0001)
-    im = Image.fromarray(np.uint8(corr_map * 255))
-    im.save('corr_map.png')
-    #utils.print_prob(prob[0], './synset.txt')
+    [cm1, cm2, cm3, cm4, cm5] = sess.run(
+            [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
+            feed_dict={key_image: key, search_image: search})
+    save_corr_map(corr_map1, 'corr_map1.png')
+    save_corr_map(corr_map2, 'corr_map2.png')
+    save_corr_map(corr_map3, 'corr_map3.png')
+    save_corr_map(corr_map4, 'corr_map4.png')
+    save_corr_map(corr_map5, 'corr_map5.png')
 
     ## simple 1-step training
     #cost = tf.reduce_sum((vgg.prob - true_out) ** 2)

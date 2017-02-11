@@ -15,14 +15,13 @@ class Vgg19:
     A trainable version VGG19.
     """
 
-    def __init__(self, vgg19_npy_path=None, trainable=True):
+    def __init__(self, vgg19_npy_path=None):
         if vgg19_npy_path is not None:
             self.data_dict = np.load(vgg19_npy_path, encoding='latin1').item()
         else:
             self.data_dict = None
 
         self.var_dict = {}
-        self.trainable = trainable
 
     def build(self, key_img, search_img):
         """
@@ -106,15 +105,11 @@ class Vgg19:
         self.search_pool5 = self.max_pool(self.search_conv5_4, 'pool5')
 
         # Cross correlation layers
-        # TODO: experiment with no whitening
-        self.search_mean_pool5 = tf.reduce_mean(self.search_pool5, axis=[0,1,2], keep_dims=True)
-        self.key_whitened_pool5 = self.key_pool5 - self.search_mean_pool5
-        self.search_whitened_pool5 = self.search_pool5 - self.search_mean_pool5
-        self.cross_corr5 = tf.nn.conv2d(
-                self.search_whitened_pool5,
-                tf.transpose(self.key_whitened_pool5, perm=[1,2,3,0]), # Conveniently batch size == out channels == 1
-                [1, 1, 1, 1],   # TODO: experiment with striding
-                padding='SAME')
+        self.corr1 = self.cross_corr_layer(self.key_pool1, self.search_pool1, "corr1")
+        self.corr2 = self.cross_corr_layer(self.key_pool2, self.search_pool2, "corr2")
+        self.corr3 = self.cross_corr_layer(self.key_pool3, self.search_pool3, "corr3")
+        self.corr4 = self.cross_corr_layer(self.key_pool4, self.search_pool4, "corr4")
+        self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5")
 
         self.data_dict = None
 
@@ -134,50 +129,59 @@ class Vgg19:
 
             return relu
 
-    def fc_layer(self, bottom, in_size, out_size, name):
+    def cross_corr_layer(self, key_pool, search_pool, name):
         with tf.variable_scope(name):
-            weights, biases = self.get_fc_var(in_size, out_size, name)
+            search_mean_pool = tf.reduce_mean(search_pool, axis=[0,1,2], keep_dims=True)
+            key_whitened_pool = key_pool - search_mean_pool
+            search_whitened_pool = search_pool - search_mean_pool
+            cross_corr = tf.nn.conv2d(
+                    search_whitened_pool,
+                    tf.transpose(key_whitened_pool, perm=[1,2,3,0]),
+                    [1, 1, 1, 1],
+                    padding='SAME')
 
-            x = tf.reshape(bottom, [-1, in_size])
-            fc = tf.nn.bias_add(tf.matmul(x, weights), biases)
+            corr_bias = self.get_var(name, [1], 0, name + "_bias")
+            bias = tf.nn.bias_add(cross_corr, corr_bias)
 
-            return fc
+            return bias
 
     def get_conv_var(self, filter_size, in_channels, out_channels, name):
-        initial_value = tf.truncated_normal([filter_size, filter_size, in_channels, out_channels], 0.0, 0.001)
-        filters = self.get_var(initial_value, name, 0, name + "_filters")
+        #initial_value = tf.truncated_normal([filter_size, filter_size, in_channels, out_channels], 0.0, 0.001)
+        #filters = self.get_var(initial_value, name, 0, name + "_filters")
 
-        initial_value = tf.truncated_normal([out_channels], .0, .001)
-        biases = self.get_var(initial_value, name, 1, name + "_biases")
+        #initial_value = tf.truncated_normal([out_channels], .0, .001)
+        #biases = self.get_var(initial_value, name, 1, name + "_biases")
+        filters = self.get_var(name, [filter_size, filter_size, in_channels, out_channels], 0, name + "_filters")
+        biases = self.get_var(name, [out_channels], 1, name + "_biases")
 
         return filters, biases
 
-    def get_fc_var(self, in_size, out_size, name):
-        initial_value = tf.truncated_normal([in_size, out_size], 0.0, 0.001)
-        weights = self.get_var(initial_value, name, 0, name + "_weights")
+#    def get_var(self, initial_value, name, idx, var_name):
+#        if self.data_dict is not None and name in self.data_dict:
+#            value = self.data_dict[name][idx]
+#        else:
+#            value = initial_value
+#
+#        var = tf.Variable(value, name=var_name)
+#
+#        self.var_dict[(name, idx)] = var
+#
+#        # print var_name, var.get_shape().as_list()
+#        assert var.get_shape() == initial_value.get_shape()
+#
+#        return var
 
-        initial_value = tf.truncated_normal([out_size], .0, .001)
-        biases = self.get_var(initial_value, name, 1, name + "_biases")
-
-        return weights, biases
-
-    def get_var(self, initial_value, name, idx, var_name):
+    def get_var(self, name, shape, idx, var_name):
         if self.data_dict is not None and name in self.data_dict:
-            value = self.data_dict[name][idx]
+            init = tf.constant_initializer(self.data_dict[name][idx])
         else:
-            value = initial_value
+            init = tf.truncated_normal(shape, 0.0, 0.001)
+            print '[WARNING] Variable with no initial value: %s' % var_name
 
-        if self.trainable:
-            var = tf.Variable(value, name=var_name)
-        else:
-            var = tf.constant(value, dtype=tf.float32, name=var_name)
-
+        var = tf.get_variable(var_name, shape=shape, initializer=init)
         self.var_dict[(name, idx)] = var
-
-        # print var_name, var.get_shape().as_list()
-        assert var.get_shape() == initial_value.get_shape()
-
         return var
+
 
     def save_npy(self, sess, npy_path="./vgg19-save.npy"):
         assert isinstance(sess, tf.Session)
