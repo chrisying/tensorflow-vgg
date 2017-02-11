@@ -111,6 +111,8 @@ class Vgg19:
         self.corr4 = self.cross_corr_layer(self.key_pool4, self.search_pool4, "corr4")
         self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5")
 
+        # Loss
+
         self.data_dict = None
 
     def avg_pool(self, bottom, name):
