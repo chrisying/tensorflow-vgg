@@ -6,7 +6,7 @@ import os
 
 import tensorflow as tf
 import numpy as np
-from PIL import Image
+from PIL import Image#, ImageDraw
 
 import vgg19_tracker as vgg19
 from CONSTANTS import *
@@ -14,26 +14,38 @@ from CONSTANTS import *
 key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'key-00000091.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
 search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
 
-def load_batch(category, key_frame):
-    data_dir = os.path.join(PROCESSED_DIR, category, key_frame)
-    key_frame = Image.open(os.path.join(data_dir, key_frame + '.png'))
+def load_batch(category, key_name):
+    data_dir = os.path.join(PROCESSED_DIR, category, key_name)
+    key_frame = Image.open(os.path.join(data_dir, key_name + '.png'))
     key_data = np.array(key_frame).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
 
     with open(os.path.join(data_dir, 'groundtruth.txt')) as f:
         key_line = f.readline()
-        assert key_line[:12] == key_frame
+        assert key_line[:12] == key_name
         x, y, w, h, s = map(float, key_line[14:].split())  # Unused right now
         s_idx = 0
-        search_batch = np.zeros([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
-        for line in f.xreadlines():
-            search_name = line[:15]
-            search_frame = Image.open(os.path.join(data_dir, search_name))
+        search_batch = np.zeros([MAX_FRAME_GAP, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
+        ground_truth = np.full([MAX_FRAME_GAP, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)
+        for search_line in f.xreadlines():
+            search_name = search_line[:15]
+            search_frame = Image.open(os.path.join(data_dir, search_name + '.png'))
             search_batch[s_idx, :, :, :] = np.array(search_frame).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
 
+            # Add circle of radium TRUTH_RADIUS of +1 to ground truth using mask
             offset_x, offset_y = map(float, search_line[17:].split())
-            # TODO: create ground truth here
+            offset_x_full, offset_y_full = offset_x * s, offset_y * s
+            true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
+            og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y, -true_center_x:SEARCH_FRAME_SIZE-true_center_x]
+            mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
+            ground_truth[s_idx, :, :, :][mask] = 1
 
-    return key_data, search_batch
+            s_idx += 1
+
+            #dr = ImageDraw.Draw(search_frame)
+            #dr.rectangle((true_center_x - 10, true_center_y - 10, true_center_x + 10, true_center_y + 10), outline='red')
+            #search_frame.save('test_offset.png')
+
+    return key_data, search_batch, ground_truth
 
 
 def save_corr_map(corr_map, filename):
