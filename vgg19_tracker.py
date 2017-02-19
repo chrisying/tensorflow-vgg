@@ -23,7 +23,7 @@ class Vgg19:
 
         self.var_dict = {}
 
-    def build(self, key_img, search_img):
+    def build(self, key_img, search_img, ground_truth):
         """
         load variable from npy to build the VGG
 
@@ -112,6 +112,21 @@ class Vgg19:
         self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5")
 
         # Loss
+        # TODO: maybe experiment with learned upsampling via deconvolution
+        self.rcorr1 = tf.image.resize_bilinear(self.corr1, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        self.rcorr2 = tf.image.resize_bilinear(self.corr2, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        self.rcorr3 = tf.image.resize_bilinear(self.corr3, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        self.rcorr4 = tf.image.resize_bilinear(self.corr4, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        self.rcorr5 = tf.image.resize_bilinear(self.corr5, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+
+        self.loss1 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr1)))
+        self.loss2 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr2)))
+        self.loss3 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr3)))
+        self.loss4 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr4)))
+        self.loss5 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr5)))
+
+        # TODO: implement weighted loss via gate
+        self.loss = self.loss1 + self.loss2 + self.loss3 + self.loss4 + self.loss5
 
         self.data_dict = None
 
@@ -166,7 +181,7 @@ class Vgg19:
         except ValueError:
             with tf.variable_scope(tf.get_variable_scope(), reuse=True):
                 var = tf.get_variable(var_name)
-                print 'Reused variable %s in %s' % (var_name, tf.get_variable_scope().name) 
+                print 'Reused variable %s in %s' % (var_name, tf.get_variable_scope().name)
 
         self.var_dict[(name, idx)] = var
         return var
