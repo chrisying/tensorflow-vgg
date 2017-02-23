@@ -59,6 +59,7 @@ def run_validation(sess, vgg, k, s, g):
         data_dir = os.path.join(PROCESSED_DIR, category)
         key_names = os.listdir(data_dir)
         for key_name in key_names:
+            print 'Running validation on %s' % key_name
             key, search, ground = load_batch(category, key_name)
             loss = sess.run(vgg.loss, feed_dict={k: key, s: search, g: ground})
             test_loss_sum += loss
@@ -105,6 +106,7 @@ def main():
         # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
         print vgg.get_var_count()
 
+        train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
         sess.run(tf.global_variables_initializer())
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
@@ -114,7 +116,6 @@ def main():
         valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
 
-        train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
