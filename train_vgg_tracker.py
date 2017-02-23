@@ -99,7 +99,7 @@ def main():
         #save_corr_map(cm5, 'corr_map5.png')
 
         train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
-        print tf.GraphKeys.TRAINABLE_VARIABLES
+        print tf.trainable_variables()
 
         valid_loss = run_validation(vgg)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
