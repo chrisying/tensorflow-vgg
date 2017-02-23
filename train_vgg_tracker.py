@@ -110,7 +110,7 @@ def main():
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
-        valid_loss = run_validation(sess, vgg, key_image, search_image, grouth_truth)
+        valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
 
         train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
@@ -135,7 +135,7 @@ def main():
                 print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)
             epoch_loss = epoch_loss_sum / len(TRAIN_CATS)
             print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
-            valid_loss = run_validation(sess, vgg, key_image, search_image, grouth_truth)
+            valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
             print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
