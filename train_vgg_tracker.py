@@ -107,9 +107,10 @@ def main():
         sess.run(tf.global_variables_initializer())
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
+        print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
-        valid_loss = run_validation(vgg)
+        valid_loss = run_validation(sess, vgg, key_image, search_image, grouth_truth)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
 
         train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
