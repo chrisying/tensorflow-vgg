@@ -65,7 +65,7 @@ def run_validation(vgg):
     return test_loss_sum / num_samples
 
 
-def convert_corr_map(corr_map, k, s, g):
+def convert_corr_map(corr_map):
     corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
     corr_map = (corr_map - np.min(corr_map))
     corr_map = corr_map / (np.max(corr_map) + 0.0001)
@@ -73,7 +73,7 @@ def convert_corr_map(corr_map, k, s, g):
     im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
     return im
 
-def diagnostic_corr_maps(sess, vgg, name):
+def diagnostic_corr_maps(sess, vgg, name, k, s, g):
     [cm1, cm2, cm3, cm4, cm5] = sess.run(
             [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
             feed_dict={k: debug_key, s: debug_search, g: debug_ground})
