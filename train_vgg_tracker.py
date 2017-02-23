@@ -65,12 +65,30 @@ def run_validation(vgg):
     return test_loss_sum / num_samples
 
 
-def save_corr_map(corr_map, filename):
+def convert_corr_map(corr_map):
     corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
     corr_map = (corr_map - np.min(corr_map))
     corr_map = corr_map / (np.max(corr_map) + 0.0001)
     im = Image.fromarray(np.uint8(corr_map * 255))
-    im.save(filename)
+    im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+    return im
+
+def diagnostic_corr_maps(name):
+    [cm1, cm2, cm3, cm4, cm5] = sess.run(
+            [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
+            feed_dict={key_image: debug_key, search_image: deubg_search, ground_truth: debug_ground})
+    c1 = convert_corr_map(cm1)
+    c2 = convert_corr_map(cm2)
+    c3 = convert_corr_map(cm3)
+    c4 = convert_corr_map(cm4)
+    c5 = convert_corr_map(cm5)
+
+    new_im = Image.new(c1.mode, (SEARCH_FRAME_SIZE * 5, SEARCH_FRAME_SIZE))
+    for i, ci in [c1,c2,c3,c4,c5]:
+        new_im.paste(ci, (i * SEARCH_FRAME_SIZE, 0))
+
+    new_im.save(name)
+
 
 def main():
 #    with tf.device('/cpu:0'):
@@ -88,21 +106,13 @@ def main():
 
         sess.run(tf.global_variables_initializer())
 
-        # debug
-        #[cm1, cm2, cm3, cm4, cm5] = sess.run(
-        #        [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
-        #        feed_dict={key_image: debug_key, search_image: deubg_search, ground_truth: debug_ground})
-        #save_corr_map(cm1, 'corr_map1.png')
-        #save_corr_map(cm2, 'corr_map2.png')
-        #save_corr_map(cm3, 'corr_map3.png')
-        #save_corr_map(cm4, 'corr_map4.png')
-        #save_corr_map(cm5, 'corr_map5.png')
-
-        train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
+        diagnostic_corr_maps(vgg, 'initial_corr_maps.png')
         print tf.trainable_variables()
 
         valid_loss = run_validation(vgg)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
+
+        train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
 
         # TODO: use QueueRunner to optimize file loading on CPU
         start = time.time()
@@ -128,6 +138,8 @@ def main():
             print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
+
+        diagnostic_corr_maps(vgg, 'final_corr_maps.png')
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
