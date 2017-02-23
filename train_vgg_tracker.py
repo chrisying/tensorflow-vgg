@@ -117,6 +117,8 @@ def main():
         sess.run(tf.global_variables_initializer())
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
+        loss, rcorr1, loss1 = sess.run([vgg.loss, vgg.rcorr1, vgg.loss1],
+                feed_dict={key_image: debug_key, search_image: debug_search, grouth_truth: debug_ground})
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
