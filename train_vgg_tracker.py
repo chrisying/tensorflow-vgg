@@ -40,6 +40,13 @@ def load_batch(category, key_name):
             true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
             og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y, -true_center_x:SEARCH_FRAME_SIZE-true_center_x]
             mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
+            if mask.shape[0] != SEARCH_FRAME_SIZE or mask.shape[1] != SEARCH_FRAME_SIZE:
+                print '-----WARNING!-----'
+                print 'mask size mismatch'
+                print category, key_name, search_line
+                print true_center_x, true_center_y
+                print mask.shape
+                print '------------------'
             ground_truth[s_idx, :, :, :][mask] = 1
 
             s_idx += 1
@@ -113,9 +120,8 @@ def main():
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
-        valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-        print '[VALID] Initial validation loss: %.5f' % valid_loss
-
+        #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+        #print '[VALID] Initial validation loss: %.5f' % valid_loss
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
@@ -132,7 +138,7 @@ def main():
                     _, loss = sess.run([train, vgg.loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
                     cat_loss_sum += loss
-                    print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, ent, loss)
+                    print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
                 cat_loss = cat_loss_sum / len(key_names)
                 epoch_loss_sum += cat_loss
                 print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)
