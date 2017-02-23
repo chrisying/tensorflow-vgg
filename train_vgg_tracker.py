@@ -116,7 +116,7 @@ def main():
         train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
         sess.run(tf.global_variables_initializer())
 
-        diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
+        #diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
         loss, rcorr1, loss1 = sess.run([vgg.loss, vgg.rcorr1, vgg.loss1],
                 feed_dict={key_image: debug_key, search_image: debug_search, ground_truth: debug_ground})
 
@@ -140,6 +140,15 @@ def main():
                 for key_name in key_names:
                     # ordering shouldn't matter
                     key, search, ground = load_batch(train_cat, key_name)
+                    rcorr1, loss1 = sess.run([vgg.rcorr1, vgg.loss1],
+                            feed_dict={key_image: key, search_image: search, ground_truth: ground})
+                    print rcorr1, loss1
+                    z = np.exp(-ground * rcorr1)
+                    print z
+                    y = np.log(1.0 + z)
+                    print y
+                    print np.mean(y)
+                    print '-----'
                     _, loss = sess.run([train, vgg.loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
                     cat_loss_sum += loss
