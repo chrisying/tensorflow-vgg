@@ -51,7 +51,7 @@ def load_batch(category, key_name):
     return key_data, search_batch, ground_truth
 
 
-def run_validation(vgg):
+def run_validation(sess, vgg, k, s, g):
     test_loss_sum = 0.0
     num_samples = 0
     for category in TEST_CATS:
@@ -59,7 +59,7 @@ def run_validation(vgg):
         key_names = os.listdir(data_dir)
         for key_name in key_names:
             key, search, ground = load_batch(category, key_name)
-            loss = sess.run(vgg.loss, feed_dict={key_image: key, search_image: search, grouth_truth: ground})
+            loss = sess.run(vgg.loss, feed_dict={k: key, s: search, g: ground})
             test_loss_sum += loss
             num_samples += 1
     return test_loss_sum / num_samples
@@ -107,7 +107,7 @@ def main():
         sess.run(tf.global_variables_initializer())
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
-        print tf.trainable_variables()
+        print map(lambda x:x.name, tf.trainable_variables())
 
         valid_loss = run_validation(vgg)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
@@ -134,7 +134,7 @@ def main():
                 print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)
             epoch_loss = epoch_loss_sum / len(TRAIN_CATS)
             print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
-            valid_loss = run_validation(vgg)
+            valid_loss = run_validation(sess, vgg, key_image, search_image, grouth_truth)
             print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
