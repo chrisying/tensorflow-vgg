@@ -65,7 +65,7 @@ def run_validation(vgg):
     return test_loss_sum / num_samples
 
 
-def convert_corr_map(corr_map):
+def convert_corr_map(corr_map, k, s, g):
     corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
     corr_map = (corr_map - np.min(corr_map))
     corr_map = corr_map / (np.max(corr_map) + 0.0001)
@@ -76,7 +76,7 @@ def convert_corr_map(corr_map):
 def diagnostic_corr_maps(sess, vgg, name):
     [cm1, cm2, cm3, cm4, cm5] = sess.run(
             [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
-            feed_dict={key_image: debug_key, search_image: deubg_search, ground_truth: debug_ground})
+            feed_dict={k: debug_key, s: debug_search, g: debug_ground})
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
@@ -106,7 +106,7 @@ def main():
 
         sess.run(tf.global_variables_initializer())
 
-        diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png')
+        diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
         print tf.trainable_variables()
 
         valid_loss = run_validation(vgg)
@@ -139,7 +139,7 @@ def main():
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
 
-        diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png')
+        diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, grouth_truth)
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
