@@ -73,7 +73,7 @@ def convert_corr_map(corr_map):
     im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
     return im
 
-def diagnostic_corr_maps(name):
+def diagnostic_corr_maps(vgg, name):
     [cm1, cm2, cm3, cm4, cm5] = sess.run(
             [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
             feed_dict={key_image: debug_key, search_image: deubg_search, ground_truth: debug_ground})
