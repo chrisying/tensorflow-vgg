@@ -56,7 +56,7 @@ def run_validation(vgg):
     num_samples = 0
     for category in TEST_CATS:
         data_dir = os.path.join(PROCESSED_DIR, category)
-        key_names = os.listdir(cat_dir)
+        key_names = os.listdir(data_dir)
         for key_name in key_names:
             key, search, ground = load_batch(category, key_name)
             loss = sess.run(vgg.loss, feed_dict={key_image: key, search_image: search, grouth_truth: ground})
