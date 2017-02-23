@@ -118,7 +118,7 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
         loss, rcorr1, loss1 = sess.run([vgg.loss, vgg.rcorr1, vgg.loss1],
-                feed_dict={key_image: debug_key, search_image: debug_search, grouth_truth: debug_ground})
+                feed_dict={key_image: debug_key, search_image: debug_search, ground_truth: debug_ground})
 
         print loss, rcorr1, loss1
 
