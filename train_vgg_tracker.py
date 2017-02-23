@@ -84,7 +84,7 @@ def diagnostic_corr_maps(sess, vgg, name, k, s, g):
     c5 = convert_corr_map(cm5)
 
     new_im = Image.new(c1.mode, (SEARCH_FRAME_SIZE * 5, SEARCH_FRAME_SIZE))
-    for i, ci in [c1,c2,c3,c4,c5]:
+    for i, ci in enumerate([c1,c2,c3,c4,c5]):
         new_im.paste(ci, (i * SEARCH_FRAME_SIZE, 0))
 
     new_im.save(name)
