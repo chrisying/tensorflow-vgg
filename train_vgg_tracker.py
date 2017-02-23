@@ -55,6 +55,7 @@ def run_validation(sess, vgg, k, s, g):
     test_loss_sum = 0.0
     num_samples = 0
     for category in TEST_CATS:
+        print 'Running validation on %s' % category
         data_dir = os.path.join(PROCESSED_DIR, category)
         key_names = os.listdir(data_dir)
         for key_name in key_names:
@@ -116,6 +117,7 @@ def main():
         train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
 
         # TODO: use QueueRunner to optimize file loading on CPU
+        print 'Starting training'
         start = time.time()
         for epoch in range(TRAIN_EPOCHS):
             epoch_loss_sum = 0.0
