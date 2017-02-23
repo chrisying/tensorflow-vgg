@@ -34,16 +34,16 @@ class Vgg19:
         #TODO: assert values are [0, 255]
 
         # Convert RGB to BGR
-        key_red, key_green, key_blue = tf.split(3, 3, key_img)
-        key_bgr = tf.concat(3, [
+        key_red, key_green, key_blue = tf.split(axis=3, num_or_size_splits=3, value=key_img)
+        key_bgr = tf.concat(axis=3, values=[
             key_blue - VGG_MEAN[0],
             key_green - VGG_MEAN[1],
             key_red - VGG_MEAN[2],
         ])
         assert key_bgr.get_shape().as_list() == [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3]
 
-        search_red, search_green, search_blue = tf.split(3, 3, search_img)
-        search_bgr = tf.concat(3, [
+        search_red, search_green, search_blue = tf.split(axis=3, num_or_size_splits=3, value=search_img)
+        search_bgr = tf.concat(axis=3, values=[
             search_blue - VGG_MEAN[0],
             search_green - VGG_MEAN[1],
             search_red - VGG_MEAN[2],

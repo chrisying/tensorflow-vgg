@@ -3,6 +3,7 @@ Train VGG19-tracker
 """
 
 import os
+import time
 
 import tensorflow as tf
 import numpy as np
@@ -50,6 +51,20 @@ def load_batch(category, key_name):
     return key_data, search_batch, ground_truth
 
 
+def run_validation(vgg):
+    test_loss_sum = 0.0
+    num_samples = 0
+    for category in TEST_CATS:
+        data_dir = os.path.join(PROCESSED_DIR, category)
+        key_names = os.listdir(cat_dir)
+        for key_name in key_names:
+            key, search, ground = load_batch(category, key_name)
+            loss = sess.run(vgg.loss, feed_dict={key_image: key, search_image: search, grouth_truth: ground})
+            test_loss_sum += loss
+            num_samples += 1
+    return test_loss_sum / num_samples
+
+
 def save_corr_map(corr_map, filename):
     corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
     corr_map = (corr_map - np.min(corr_map))
@@ -71,7 +86,7 @@ def main():
         # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
         print vgg.get_var_count()
 
-        sess.run(tf.initialize_all_variables())
+        sess.run(tf.global_variables_initializer())
 
         # debug
         #[cm1, cm2, cm3, cm4, cm5] = sess.run(
@@ -83,20 +98,39 @@ def main():
         #save_corr_map(cm4, 'corr_map4.png')
         #save_corr_map(cm5, 'corr_map5.png')
 
-        # simple 1-step training
         train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
+        print tf.GraphKeys.TRAINABLE_VARIABLES
 
-        for train_cat in TRAIN_CATS:
-            cat_dir = os.path.join(PROCESSED_DIR, train_cat)
-            for ent in os.listdir(cat_dir):
-                print ent
+        valid_loss = run_validation(vgg)
+        print '[VALID] Initial validation loss: %.5f' % valid_loss
 
-        ## test classification again, should have a higher probability about tiger
-        #prob = sess.run(vgg.prob, feed_dict={images: batch1, train_mode: False})
-        #utils.print_prob(prob[0], './synset.txt')
+        # TODO: use QueueRunner to optimize file loading on CPU
+        start = time.time()
+        for epoch in range(TRAIN_EPOCHS):
+            epoch_loss_sum = 0.0
+            for train_cat in TRAIN_CATS:
+                cat_dir = os.path.join(PROCESSED_DIR, train_cat)
+                key_names = os.listdir(cat_dir)
+                cat_loss_sum = 0.0
+                for key_name in key_names:
+                    # ordering shouldn't matter
+                    key, search, ground = load_batch(train_cat, key_name)
+                    _, loss = sess.run([train, vgg.loss],
+                            feed_dict={key_image: key, search_image: search, ground_truth: ground})
+                    cat_loss_sum += loss
+                    print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, ent, loss)
+                cat_loss = cat_loss_sum / len(key_names)
+                epoch_loss_sum += cat_loss
+                print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)
+            epoch_loss = epoch_loss_sum / len(TRAIN_CATS)
+            print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
+            valid_loss = run_validation(vgg)
+            print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
+        dur = time.time() - start
+        print 'Training completed in %d seconds' % dur
 
-        ## test save
-        #vgg.save_npy(sess, './test-save.npy')
+        # save model
+        vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
 
 if __name__ == '__main__':
     main()

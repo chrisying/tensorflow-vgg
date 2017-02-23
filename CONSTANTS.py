@@ -11,6 +11,7 @@ KEY_FRAME_SIZE = 128
 SEARCH_FRAME_SIZE = 256
 TRUTH_RADIUS = 3
 
+TRAIN_EPOCHS = 1
 TRAIN_CATS = ['bag',
               'ball1',
               'basketball',
