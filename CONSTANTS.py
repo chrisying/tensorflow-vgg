@@ -41,7 +41,7 @@ TRAIN_CATS = ['bag',
               'marching',
               'matrix',
               'motocross1',
-              'nature'
+              'nature',
               'octopus',
               'pedestrian1',
               'rabbit',
