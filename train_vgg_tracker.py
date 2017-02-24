@@ -116,17 +116,17 @@ def main():
         train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
         sess.run(tf.global_variables_initializer())
 
-        #diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
-        loss, rcorr1, loss1 = sess.run([vgg.loss, vgg.rcorr1, vgg.loss1],
-                feed_dict={key_image: debug_key, search_image: debug_search, ground_truth: debug_ground})
+        diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
+        #loss, rcorr1, loss1 = sess.run([vgg.loss, vgg.rcorr1, vgg.loss1],
+        #        feed_dict={key_image: debug_key, search_image: debug_search, ground_truth: debug_ground})
 
-        print loss, rcorr1, loss1
+        #print loss, rcorr1, loss1
 
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
-        #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-        #print '[VALID] Initial validation loss: %.5f' % valid_loss
+        valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+        print '[VALID] Initial validation loss: %.5f' % valid_loss
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
@@ -140,19 +140,19 @@ def main():
                 for key_name in key_names:
                     # ordering shouldn't matter
                     key, search, ground = load_batch(train_cat, key_name)
-                    rcorr1, loss1 = sess.run([vgg.rcorr1, vgg.loss1],
-                            feed_dict={key_image: key, search_image: search, ground_truth: ground})
-                    print rcorr1, loss1
-                    z = np.exp(-ground * rcorr1)
-                    print z
-                    y = np.log(1.0 + z)
-                    print y
-                    print np.mean(y)
-                    print '-----'
+                    #rcorr1, loss1 = sess.run([vgg.rcorr1, vgg.loss1],
+                    #        feed_dict={key_image: key, search_image: search, ground_truth: ground})
+                    #print rcorr1, loss1
+                    #z = np.exp(-ground * rcorr1)
+                    #print z
+                    #y = np.log(1.0 + z)
+                    #print y
+                    #print np.mean(y)
+                    #print '-----'
                     _, loss = sess.run([train, vgg.loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
                     cat_loss_sum += loss
-                    print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
+                    #print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
                 cat_loss = cat_loss_sum / len(key_names)
                 epoch_loss_sum += cat_loss
                 print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)

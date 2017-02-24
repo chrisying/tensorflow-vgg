@@ -160,7 +160,12 @@ class Vgg19:
             corr_bias = self.get_var(name, [1], 0, name + "_bias")
             bias = tf.nn.bias_add(cross_corr, corr_bias)
 
-            return bias
+            # Rescale to [-1, 1]
+            min_v = tf.reduce_min(bias, axis=[1,2], keep_dims=True)
+            max_v = tf.reduce_max(bias, axis=[1,2], keep_dims=True)
+            normalized = 2.0 * ((bias - min_v) / (max_v - min_v)) - 1
+
+            return normalized
 
     def get_conv_var(self, filter_size, in_channels, out_channels, name):
         filters = self.get_var(name, [filter_size, filter_size, in_channels, out_channels], 0, name + "_filters")
