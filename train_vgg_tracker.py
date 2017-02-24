@@ -12,6 +12,9 @@ from PIL import Image#, ImageDraw
 import vgg19_tracker as vgg19
 from CONSTANTS import *
 
+# For resolving some floating point precision errors
+EPSILON = 1e-5
+
 # Debugging inputs
 debug_key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'key-00000091.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
 debug_search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
@@ -38,7 +41,7 @@ def load_batch(category, key_name):
             offset_x, offset_y = map(float, search_line[17:].split())
             offset_x_full, offset_y_full = offset_x * s, offset_y * s
             true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
-            og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y, -true_center_x:SEARCH_FRAME_SIZE-true_center_x]
+            og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y-EPSILON, -true_center_x:SEARCH_FRAME_SIZE-true_center_x-EPSILON]
             mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
             if mask.shape[0] != SEARCH_FRAME_SIZE or mask.shape[1] != SEARCH_FRAME_SIZE:
                 print '-----WARNING!-----'
@@ -46,6 +49,8 @@ def load_batch(category, key_name):
                 print category, key_name, search_line
                 print true_center_x, true_center_y
                 print mask.shape
+		print og_y.shape, og_x.shape
+		print -true_center_x, SEARCH_FRAME_SIZE-true_center_x
                 print '------------------'
             ground_truth[s_idx, :, :, :][mask] = 1
 
