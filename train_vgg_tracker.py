@@ -74,6 +74,7 @@ def run_validation(sess, vgg, k, s, g):
             print 'Running validation on %s' % key_name
             key, search, ground = load_batch(category, key_name)
             loss = sess.run(vgg.loss, feed_dict={k: key, s: search, g: ground})
+            print '[VALID] Batch loss on %s %s: %.5f' % (category, key_name, loss)
             test_loss_sum += loss
             num_samples += 1
     return test_loss_sum / num_samples
@@ -157,7 +158,7 @@ def main():
                     _, loss = sess.run([train, vgg.loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
                     cat_loss_sum += loss
-                    #print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
+                    print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
                 cat_loss = cat_loss_sum / len(key_names)
                 epoch_loss_sum += cat_loss
                 print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)
