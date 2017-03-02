@@ -52,7 +52,7 @@ TRAIN_CATS = ['bag',
               'singer1',
               'singer2',
               'soccer1',
-              'soldier'
+              'soldier',
               'sphere',
               'tiger',
               'traffic',
