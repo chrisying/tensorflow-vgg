@@ -4,6 +4,7 @@ Train VGG19-tracker
 
 import os
 import time
+import sys
 
 import tensorflow as tf
 import numpy as np
@@ -119,14 +120,10 @@ def main():
         # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
         print vgg.get_var_count()
 
-        train = tf.train.AdamOptimizer(0.0001).minimize(vgg.loss)
+        train = tf.train.AdamOptimizer(1e-5).minimize(vgg.loss)
         sess.run(tf.global_variables_initializer())
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
-        #loss, rcorr1, loss1 = sess.run([vgg.loss, vgg.rcorr1, vgg.loss1],
-        #        feed_dict={key_image: debug_key, search_image: debug_search, ground_truth: debug_ground})
-
-        #print loss, rcorr1, loss1
 
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
@@ -146,26 +143,30 @@ def main():
                 for key_name in key_names:
                     # ordering shouldn't matter
                     key, search, ground = load_batch(train_cat, key_name)
-                    #rcorr1, loss1 = sess.run([vgg.rcorr1, vgg.loss1],
-                    #        feed_dict={key_image: key, search_image: search, ground_truth: ground})
-                    #print rcorr1, loss1
-                    #z = np.exp(-ground * rcorr1)
-                    #print z
-                    #y = np.log(1.0 + z)
-                    #print y
-                    #print np.mean(y)
-                    #print '-----'
                     _, loss = sess.run([train, vgg.loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
+
+                    if not np.isfinite(loss):
+                        print '-----WARNING-----'
+                        print 'Loss non-finite at %s %s' % (train_cat, key_name)
+                        r1, r2, r3, r4, r5, l1, l2, l3, l4, l5 = sess.run([vgg.rcorr1, vgg.loss, vgg.loss1],
+                                 feed_dict={key_image: key, search_image: search, ground_truth: ground})
+                        np.save('nonfinite.npy', {'r1':r1, 'r2':r2, 'r3':r3, 'r4':r4, 'r5':r5, 'l1':l1, 'l2':l2, 'l3':l3, 'l4':l4, 'l5':l5})
+                        sys.exit()
+                        print '-----------------'
+
                     cat_loss_sum += loss
                     print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
+
                 cat_loss = cat_loss_sum / len(key_names)
                 epoch_loss_sum += cat_loss
                 print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)
+
             epoch_loss = epoch_loss_sum / len(TRAIN_CATS)
             print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
             valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
             print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
+
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
 
