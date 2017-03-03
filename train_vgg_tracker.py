@@ -90,8 +90,9 @@ def convert_corr_map(corr_map):
     return im
 
 def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_img):
+    # Expects key_img, search_img, ground_img to be batch size 1
     [cm1, cm2, cm3, cm4, cm5] = sess.run(
-            [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
+            [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5],
             feed_dict={k: key_img, s: search_img, g: ground_img})
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
@@ -138,7 +139,6 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
-        '''
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
@@ -157,6 +157,9 @@ def main():
                 for key_name in key_names:
                     # ordering shouldn't matter
                     key, search, ground = load_batch(train_cat, key_name)
+                    if train_cat == 'tiger' and key_name == 'key-00000121':
+                        visualize_corr_maps(sess, vgg, 'tiger-00000121.png', key_image, search_image, ground_truth,
+                                            key[30,:,:,:], search[30,:,:,:], ground[30,:,:,:])
                     _, loss = sess.run([train, vgg.loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
 
@@ -188,7 +191,6 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
-        '''
 
 if __name__ == '__main__':
     main()
