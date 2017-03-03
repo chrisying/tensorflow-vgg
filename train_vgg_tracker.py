@@ -8,7 +8,7 @@ import sys
 
 import tensorflow as tf
 import numpy as np
-from PIL import Image#, ImageDraw
+from PIL import Image, ImageDraw
 
 import vgg19_tracker as vgg19
 from CONSTANTS import *
@@ -89,21 +89,33 @@ def convert_corr_map(corr_map):
     im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
     return im
 
-def diagnostic_corr_maps(sess, vgg, name, k, s, g):
+def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_img):
     [cm1, cm2, cm3, cm4, cm5] = sess.run(
             [vgg.corr1, vgg.corr2, vgg.corr3, vgg.corr4, vgg.corr5],
-            feed_dict={k: debug_key, s: debug_search, g: debug_ground})
+            feed_dict={k: key_img, s: search_img, g: ground_img})
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
     c4 = convert_corr_map(cm4)
     c5 = convert_corr_map(cm5)
 
-    new_im = Image.new(c1.mode, (SEARCH_FRAME_SIZE * 5, SEARCH_FRAME_SIZE))
+    PAD = 2
+
+    new_im = Image.new('RGB', ((SEARCH_FRAME_SIZE+2*PAD) * 7, (SEARCH_FRAME_SIZE+2*PAD), (128,128,128)))
+    new_im.paste(im.fromarray(key_img), (KEY_FRAME_SIZE+PAD, KEY_FRAME_SIZE+PAD))
+
+    red = np.zeros((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
+    red[0,:,:] = 255
+    combined_search = np.where(ground_img==-1, search_img, red)
+    new_im.paste(im.fromarray(combined_search, (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
+
     for i, ci in enumerate([c1,c2,c3,c4,c5]):
-        new_im.paste(ci, (i * SEARCH_FRAME_SIZE, 0))
+        new_im.paste(ci, ((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD, PAD))
 
     new_im.save(name)
+
+def diagnostic_corr_maps(sess, vgg, name, k, s, g):
+    visualize_corr_maps(sess, vgg, name, k, s, g, debug_key, debug_search, debug_ground)
 
 
 def main():
@@ -125,6 +137,7 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
+        '''
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
@@ -174,6 +187,7 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        '''
 
 if __name__ == '__main__':
     main()
