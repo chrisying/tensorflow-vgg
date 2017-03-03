@@ -19,7 +19,7 @@ EPSILON = 1e-5
 # Debugging inputs
 debug_key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'key-00000091.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
 debug_search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
-debug_ground = np.zeros([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1])
+debug_ground = np.full([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)   # unused
 
 def load_batch(category, key_name):
     data_dir = os.path.join(PROCESSED_DIR, category, key_name)
@@ -107,9 +107,7 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
 
     red = np.zeros((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
     red[:,:,2] = 255
-    combined_search = np.where(ground_img==-1, search_img, red).reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
-    print ground_img
-    print ground_img == -1
+    combined_search = np.where(ground_img<0, search_img, red).reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
     print combined_search
     new_im.paste(Image.fromarray(combined_search), (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
 
