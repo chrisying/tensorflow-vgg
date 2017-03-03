@@ -103,7 +103,7 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
 
     new_im = Image.new('RGB', ((SEARCH_FRAME_SIZE+2*PAD) * 7, (SEARCH_FRAME_SIZE+2*PAD)), (128,128,128))
     key_img = key_img.reshape((KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3))
-    new_im.paste(Image.fromarray(key_img), (KEY_FRAME_SIZE+PAD, KEY_FRAME_SIZE+PAD))
+    new_im.paste(Image.fromarray(key_img), (KEY_FRAME_SIZE/2+PAD, KEY_FRAME_SIZE/2+PAD))
 
     red = np.zeros((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3), dtype='uint8')
     red[:,:,2] = 255
