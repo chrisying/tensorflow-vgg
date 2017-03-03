@@ -107,8 +107,7 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
 
     red = np.zeros((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
     red[0,:,:] = 255
-    search_img = search_img.reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
-    combined_search = np.where(ground_img==-1, search_img, red)
+    combined_search = np.where(ground_img==-1, search_img, red).reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
     new_im.paste(Image.fromarray(combined_search), (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
 
     for i, ci in enumerate([c1,c2,c3,c4,c5]):
