@@ -140,7 +140,7 @@ def main():
         key, search, ground = load_batch('tiger', 'key-00000121')
         print key.shape, search.shape, ground.shape
         visualize_corr_maps(sess, vgg, 'tiger-00000121.png', key_image, search_image, ground_truth,
-                            key[30:31,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
+                            key[:,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
 
         '''
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
