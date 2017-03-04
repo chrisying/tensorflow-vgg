@@ -137,11 +137,6 @@ def main():
         train = tf.train.AdamOptimizer(1e-5).minimize(vgg.loss)
         sess.run(tf.global_variables_initializer())
 
-        key, search, ground = load_batch('tiger', 'key-00000121')
-        visualize_corr_maps(sess, vgg, 'tiger-00000121.png', key_image, search_image, ground_truth,
-                            key[:,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
-
-        '''
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
         print 'Trainable variables:'
@@ -162,6 +157,8 @@ def main():
                 for key_name in key_names:
                     # ordering shouldn't matter
                     key, search, ground = load_batch(train_cat, key_name)
+
+                    # Random frame in middle of training to test on
                     if train_cat == 'tiger' and key_name == 'key-00000121':
                         visualize_corr_maps(sess, vgg, 'tiger-00000121.png', key_image, search_image, ground_truth,
                                             key[30:31,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
@@ -196,7 +193,6 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
-        '''
 
 if __name__ == '__main__':
     main()
