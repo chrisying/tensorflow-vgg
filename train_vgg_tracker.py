@@ -109,6 +109,8 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
     red = np.zeros((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3), dtype='uint8')
     red[:,:,2] = 255
     combined_search = np.where(ground_img<0, search_img, red).reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
+    print combined_search.dtype
+    print combined_search.shape
     new_im.paste(Image.fromarray(combined_search), (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
 
     for i, ci in enumerate([c1,c2,c3,c4,c5]):
@@ -138,7 +140,6 @@ def main():
         sess.run(tf.global_variables_initializer())
 
         key, search, ground = load_batch('tiger', 'key-00000121')
-        print key.shape, search.shape, ground.shape
         visualize_corr_maps(sess, vgg, 'tiger-00000121.png', key_image, search_image, ground_truth,
                             key[:,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
 
