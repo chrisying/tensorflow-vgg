@@ -145,7 +145,6 @@ def main():
         valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
 
-        '''
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
         start = time.time()
@@ -194,7 +193,6 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
-        '''
 
 if __name__ == '__main__':
     main()
