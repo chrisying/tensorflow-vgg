@@ -142,13 +142,13 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
-        '''
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
         valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
 
+        '''
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
         start = time.time()
