@@ -199,7 +199,7 @@ class Vgg19:
     def extract_corr_features(self, corr):
         # Kurtosis
         corr_mean, corr_var = tf.nn.moments(corr, [1,2,3])
-        kurt = tf.pow(corr_mean, tf.constant(4)) / tf.pow(corr_var, tf.constant(2))
+        kurt = tf.pow(corr_mean, tf.constant(4.0)) / tf.pow(corr_var, tf.constant(2.0))
 
         # Max peak
         max_peak = tf.reduce_max(corr, axis=[1,2,3])
