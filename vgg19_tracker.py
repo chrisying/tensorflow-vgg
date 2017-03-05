@@ -119,6 +119,13 @@ class Vgg19:
         self.rcorr4 = tf.image.resize_bilinear(self.corr4, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
         self.rcorr5 = tf.image.resize_bilinear(self.corr5, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
 
+        # Gating feature vectors
+        self.gate1 = self.extract_corr_features(self.rcorr1)
+        self.gate2 = self.extract_corr_features(self.rcorr2)
+        self.gate3 = self.extract_corr_features(self.rcorr3)
+        self.gate4 = self.extract_corr_features(self.rcorr4)
+        self.gate5 = self.extract_corr_features(self.rcorr5) # Note: gate5 is not necessary for conditional comp
+
         self.loss1 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr1)))
         self.loss2 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr2)))
         self.loss3 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr3)))
@@ -148,24 +155,21 @@ class Vgg19:
 
     def cross_corr_layer(self, key_pool, search_pool, name):
         with tf.variable_scope(name):
-            search_mean_pool = tf.reduce_mean(search_pool, axis=[0,1,2], keep_dims=True)
-            key_whitened_pool = key_pool - search_mean_pool
-            search_whitened_pool = search_pool - search_mean_pool
+            key_mean, key_var = tf.nn.moments(key_pool, [1,2,3], keep_dims=True)
+            key_white = (key_pool - key_mean) / (tf.sqrt(key_var) + 0.0001)
+            search_mean, search_var = tf.nn.moments(search_pool, [1,2,3], keep_dims=True)
+            search_white = (search_pool - search_mean) / (tf.sqrt(search_var) + 0.0001)
+
             cross_corr = tf.nn.conv2d(
-                    search_whitened_pool,
-                    tf.transpose(key_whitened_pool, perm=[1,2,3,0]),
+                    search_white,
+                    tf.transpose(key_white, perm=[1,2,3,0]),
                     [1, 1, 1, 1],
                     padding='SAME')
 
             corr_bias = self.get_var(name, [1], 0, name + "_bias")
             bias = tf.nn.bias_add(cross_corr, corr_bias)
 
-            # Rescale to [-1, 1]
-            min_v = tf.reduce_min(bias, axis=[1,2], keep_dims=True)
-            max_v = tf.reduce_max(bias, axis=[1,2], keep_dims=True)
-            normalized = 2.0 * ((bias - min_v) / (max_v - min_v)) - 1
-
-            return normalized
+            return bias
 
     def get_conv_var(self, filter_size, in_channels, out_channels, name):
         filters = self.get_var(name, [filter_size, filter_size, in_channels, out_channels], 0, name + "_filters")
@@ -190,6 +194,17 @@ class Vgg19:
 
         self.var_dict[(name, idx)] = var
         return var
+
+    # TODO: add more features
+    def extract_corr_features(self, corr):
+        # Kurtosis
+        corr_mean, corr_var = tf.nn.moments(corr, [1,2,3])
+        kurt = tf.pow(corr_mean, tf.constant(4)) / tf.pow(corr_var, tf.constant(2))
+
+        # Max peak
+        max_peak = tf.reduce_max(corr, axis=[1,2,3])
+
+        return tf.stack([kurt, max_peak], axis=1)
 
     def save_npy(self, sess, npy_path="./vgg19-save.npy"):
         assert isinstance(sess, tf.Session)
