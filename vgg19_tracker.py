@@ -105,11 +105,11 @@ class Vgg19:
         self.search_pool5 = self.max_pool(self.search_conv5_4, 'pool5')
 
         # Cross correlation layers
-        self.corr1, self.kw1 = self.cross_corr_layer(self.key_pool1, self.search_pool1, "corr1")
-        self.corr2, self.kw2 = self.cross_corr_layer(self.key_pool2, self.search_pool2, "corr2")
-        self.corr3, self.kw3 = self.cross_corr_layer(self.key_pool3, self.search_pool3, "corr3")
-        self.corr4, self.kw4 = self.cross_corr_layer(self.key_pool4, self.search_pool4, "corr4")
-        self.corr5, self.kw5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5")
+        self.corr1 = self.cross_corr_layer(self.key_pool1, self.search_pool1, "corr1")
+        self.corr2 = self.cross_corr_layer(self.key_pool2, self.search_pool2, "corr2")
+        self.corr3 = self.cross_corr_layer(self.key_pool3, self.search_pool3, "corr3")
+        self.corr4 = self.cross_corr_layer(self.key_pool4, self.search_pool4, "corr4")
+        self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5")
 
         # Loss
         # TODO: maybe experiment with learned upsampling via deconvolution
@@ -169,7 +169,10 @@ class Vgg19:
             corr_bias = self.get_var(name, [1], 0, name + "_bias")
             bias = tf.nn.bias_add(cross_corr, corr_bias)
 
-            return bias, key_white
+            corr_mean, corr_var = tf.nn.moments(bias, [1,2,3], keep_dims=True)
+            corr_norm = (bias - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
+
+            return corr_norm
 
     def get_conv_var(self, filter_size, in_channels, out_channels, name):
         filters = self.get_var(name, [filter_size, filter_size, in_channels, out_channels], 0, name + "_filters")
