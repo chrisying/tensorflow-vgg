@@ -74,6 +74,9 @@ def run_validation(sess, vgg, k, s, g):
         for key_name in key_names:
             print 'Running validation on %s' % key_name
             key, search, ground = load_batch(category, key_name)
+            c1, l1 = sess.run([vgg.corr1, vgg.loss1], feed_dict={k: key, s: search, g: ground})
+            print c1
+            print l1
             loss = sess.run(vgg.loss, feed_dict={k: key, s: search, g: ground})
             print '[VALID] Batch loss on %s %s: %.5f' % (category, key_name, loss)
             test_loss_sum += loss
@@ -139,6 +142,7 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
+        '''
         print 'Trainable variables:'
         print map(lambda x:x.name, tf.trainable_variables())
 
@@ -193,6 +197,7 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        '''
 
 if __name__ == '__main__':
     main()
