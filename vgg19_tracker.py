@@ -232,6 +232,7 @@ class Vgg19:
 
     def confidence(self, gate, name):
         with tf.variable_scope(name):
+            input_dim = gate.shape[1]
             weights, bias = self.get_gate_var(name, input_dim)
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
             return output
