@@ -128,11 +128,11 @@ class Vgg19:
         self.gate5 = self.extract_corr_features(self.rcorr5) # Note: gate5 is not necessary for conditional comp
 
         # Confidence of gates
-        self.conf1 = self.confidence(self.gate1)
-        self.conf2 = self.confidence(self.gate2)
-        self.conf3 = self.confidence(self.gate3)
-        self.conf4 = self.confidence(self.gate4)
-        self.conf5 = self.confidence(self.gate5)
+        self.conf1 = self.confidence(self.gate1, 'conf1')
+        self.conf2 = self.confidence(self.gate2, 'conf2')
+        self.conf3 = self.confidence(self.gate3, 'conf3')
+        self.conf4 = self.confidence(self.gate4, 'conf4')
+        self.conf5 = self.confidence(self.gate5, 'conf5')
 
         # Prediction and loss
         self.prediction = ((self.conf1 * self.rcorr1 +
@@ -142,6 +142,7 @@ class Vgg19:
                             self.conf5 * self.rcorr5) /
                             (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
+        # TODO: add computation cost
         self.loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.prediction)))
 
         #self.loss1 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr1)))
