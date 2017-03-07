@@ -249,6 +249,8 @@ class Vgg19:
         self.gate_var_list.append(weights)
         self.gate_var_list.append(bias)
 
+        print 'returning %s' % (str(weights.get_shape()))
+
         return weights, bias
 
     def save_npy(self, sess, npy_path="./vgg19-save.npy"):
