@@ -234,6 +234,8 @@ class Vgg19:
         with tf.variable_scope(name):
             input_dim = gate.shape[1].value
             weights, bias = self.get_gate_var(name, input_dim)
+            muled = tf.matmul(gate, weights)
+            print muled.shape
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
             return output
 
