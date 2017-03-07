@@ -39,6 +39,7 @@ def load_batch(category, key_name):
             search_batch[s_idx, :, :, :] = np.array(search_frame).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
 
             # Add circle of radium TRUTH_RADIUS of +1 to ground truth using mask
+            # TODO: Gaussian kernel loss instead
             offset_x, offset_y = map(float, search_line[17:].split())
             offset_x_full, offset_y_full = offset_x * s, offset_y * s
             true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
@@ -134,13 +135,13 @@ def main():
         # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
         print vgg.get_var_count()
 
-        train = tf.train.AdamOptimizer(1e-5).minimize(vgg.loss)
+        train = tf.train.AdamOptimizer(1e-5).minimize(vgg.loss, var_list=vgg.gate_var_list)
         sess.run(tf.global_variables_initializer())
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
         print 'Trainable variables:'
-        print map(lambda x:x.name, tf.trainable_variables())
+        print map(lambda x:x.name, vgg.gate_var_list)
 
         valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
