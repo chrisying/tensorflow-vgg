@@ -236,7 +236,7 @@ class Vgg19:
             weights, bias = self.get_gate_var(name, input_dim)
             muled = tf.matmul(gate, weights)
             print gate.shape
-            print weights.shape
+            print weights.get_shape()
             print muled.shape
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
             return output
