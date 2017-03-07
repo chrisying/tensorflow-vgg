@@ -135,12 +135,12 @@ class Vgg19:
         self.conf5 = self.confidence(self.gate5)
 
         # Prediction and loss
-        self.prediction = (self.conf1 * self.rcorr1 +
-                           self.conf2 * self.rcorr2 +
-                           self.conf3 * self.rcorr3 +
-                           self.conf4 * self.rcorr4 +
-                           self.conf5 * self.rcorr5) /
-                           (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001)
+        self.prediction = ((self.conf1 * self.rcorr1 +
+                            self.conf2 * self.rcorr2 +
+                            self.conf3 * self.rcorr3 +
+                            self.conf4 * self.rcorr4 +
+                            self.conf5 * self.rcorr5) /
+                            (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
         self.loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.prediction)))
 
@@ -185,6 +185,7 @@ class Vgg19:
                     [1, 1, 1, 1],
                     padding='SAME')
 
+            # TODO: these are never tuned if we don't fine tune
             corr_bias = self.get_var(name, [1], 0, name + "_bias")
             bias = tf.nn.bias_add(cross_corr, corr_bias)
 
