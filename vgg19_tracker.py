@@ -210,7 +210,7 @@ class Vgg19:
             else:
                 init = tf.truncated_normal_initializer(shape, 0.0, 0.001)
                 var = tf.get_variable(var_name, shape=shape, initializer=init)
-                print '%s: %s' % (var_name, str(var.get_shape()))
+                print '%s: %s -> %s' % (var_name, shape, str(var.get_shape()))
                 print 'Initialized Variable %s in %s' % (var_name, tf.get_variable_scope().name)
         except ValueError:
             with tf.variable_scope(tf.get_variable_scope(), reuse=True):
