@@ -119,7 +119,7 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
     d = ImageDraw.Draw(new_im)
     fnt = ImageFont.truetype('RobotoMono-Regular.ttf', 16)
     for i, ct in enumerate([con1, con2, con3, con4, con5]):
-        d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), str(ct), font=fnt, fill=(255, 0, 0, 255))
+        d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), "%.5f" % ct.reshape([1])[0], font=fnt, fill=(255, 0, 0, 255))
 
     new_im.save(name)
 
@@ -146,7 +146,6 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
-        '''
         print 'Trainable variables:'
         print map(lambda x:x.name, vgg.gate_var_list)
 
@@ -201,7 +200,6 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
-        '''
 
 if __name__ == '__main__':
     main()
