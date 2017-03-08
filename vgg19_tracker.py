@@ -208,7 +208,7 @@ class Vgg19:
                 var = tf.get_variable(var_name, shape=shape, initializer=init)
                 print 'Loaded Variable %s in %s from file' % (var_name, tf.get_variable_scope().name)
             else:
-                init = tf.truncated_normal_initializer(shape, 0.0, 0.001)
+                init = tf.truncated_normal_initializer(0.0, 0.001)
                 var = tf.get_variable(var_name, shape=shape, initializer=init)
                 print '%s: %s -> %s' % (var_name, shape, str(var.get_shape()))
                 print 'Initialized Variable %s in %s' % (var_name, tf.get_variable_scope().name)
