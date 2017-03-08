@@ -117,7 +117,7 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
         new_im.paste(ci, ((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD, PAD))
 
     d = ImageDraw.Draw(new_im)
-    fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 16)
+    fnt = ImageFont.truetype('RobotoMono-Regular.ttf', 16)
     for i, ct in enumerate([con1, con2, con3, con4, con5]):
         d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), str(ct), font=fnt, fill=(255, 0, 0, 255))
 
