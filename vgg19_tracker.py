@@ -210,7 +210,6 @@ class Vgg19:
             else:
                 init = tf.truncated_normal_initializer(0.0, 0.001)
                 var = tf.get_variable(var_name, shape=shape, initializer=init)
-                print '%s: %s -> %s' % (var_name, shape, str(var.get_shape()))
                 print 'Initialized Variable %s in %s' % (var_name, tf.get_variable_scope().name)
         except ValueError:
             with tf.variable_scope(tf.get_variable_scope(), reuse=True):
@@ -236,9 +235,6 @@ class Vgg19:
             input_dim = gate.shape[1].value
             weights, bias = self.get_gate_var(name, input_dim)
             muled = tf.matmul(gate, weights)
-            print gate.shape
-            print weights.get_shape()
-            print muled.shape
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
             return output
 
@@ -248,8 +244,6 @@ class Vgg19:
 
         self.gate_var_list.append(weights)
         self.gate_var_list.append(bias)
-
-        print 'returning %s' % (str(weights.get_shape()))
 
         return weights, bias
 
