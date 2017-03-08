@@ -8,7 +8,7 @@ import sys
 
 import tensorflow as tf
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 import vgg19_tracker as vgg19
 from CONSTANTS import *
@@ -92,8 +92,9 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_img):
     # Expects key_img, search_img, ground_img to be batch size 1
-    [cm1, cm2, cm3, cm4, cm5] = sess.run(
-            [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5],
+    [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
+            [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
+             vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5],
             feed_dict={k: key_img, s: search_img, g: ground_img})
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
@@ -114,6 +115,11 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
 
     for i, ci in enumerate([c1,c2,c3,c4,c5]):
         new_im.paste(ci, ((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD, PAD))
+
+    d = ImageDraw.Draw(new_im)
+    fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 16)
+    for i, ct in enumerate([con1, con2, con3, con4, con5]):
+        d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), str(ct), font=fnt, fill=(255, 0, 0, 255))
 
     new_im.save(name)
 
@@ -140,6 +146,7 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
+        '''
         print 'Trainable variables:'
         print map(lambda x:x.name, vgg.gate_var_list)
 
@@ -194,6 +201,7 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        '''
 
 if __name__ == '__main__':
     main()
