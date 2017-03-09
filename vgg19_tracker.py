@@ -22,6 +22,7 @@ class Vgg19:
             self.data_dict = None
 
         self.var_dict = {}
+        self.cnn_var_list = []
         self.gate_var_list = []
 
     def build(self, key_img, search_img, ground_truth):
@@ -135,24 +136,17 @@ class Vgg19:
         self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
         # Prediction and loss
-        self.prediction = ((self.conf1 * self.rcorr1 +
-                            self.conf2 * self.rcorr2 +
-                            self.conf3 * self.rcorr3 +
-                            self.conf4 * self.rcorr4 +
-                            self.conf5 * self.rcorr5) /
-                            (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
+        self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
+        self.gated_prediction = ((self.conf1 * self.rcorr1 +
+                                  self.conf2 * self.rcorr2 +
+                                  self.conf3 * self.rcorr3 +
+                                  self.conf4 * self.rcorr4 +
+                                  self.conf5 * self.rcorr5) /
+                                  (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
+        self.raw_loss =  tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.prediction)))
         # TODO: add computation cost
-        self.loss = self.weighted_logistic_loss(ground_truth, self.prediction)
-
-        #self.loss1 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr1)))
-        #self.loss2 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr2)))
-        #self.loss3 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr3)))
-        #self.loss4 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr4)))
-        #self.loss5 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr5)))
-
-        ## TODO: implement weighted loss via gate
-        #self.loss = self.loss1 + self.loss2 + self.loss3 + self.loss4 + self.loss5
+        self.gated_loss = self.weighted_logistic_loss(ground_truth, self.prediction)
 
         self.data_dict = None
 
@@ -221,7 +215,7 @@ class Vgg19:
         print ground_truth.get_shape()
         scale = (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
         weight = tf.select(ground_truth > 0, tf.fill(ground_truth.shape,
-        loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.prediction)))
+        loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.prediction)) * weight)
 
         return loss
 
