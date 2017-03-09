@@ -183,6 +183,7 @@ class Vgg19:
 
             # NOTE: these are never tuned if we don't fine tune
             corr_bias = self.get_var(name, [1], 0, name + "_bias")
+            self.cnn_var_list.append(corr_bias)
             bias = tf.nn.bias_add(cross_corr, corr_bias)
             output = tf.tanh(bias)
 
@@ -222,6 +223,9 @@ class Vgg19:
     def get_conv_var(self, filter_size, in_channels, out_channels, name):
         filters = self.get_var(name, [filter_size, filter_size, in_channels, out_channels], 0, name + "_filters")
         biases = self.get_var(name, [out_channels], 1, name + "_biases")
+
+        self.cnn_var_list.append(filters)
+        self.cnn_var_list.append(biases)
 
         return filters, biases
 

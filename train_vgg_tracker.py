@@ -147,7 +147,9 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
-        print 'Trainable variables:'
+        print 'Trainable variables (finetune):'
+        print map(lambda x:x.name, vgg.cnn_var_list)
+        print 'Trainable variables (gate):'
         print map(lambda x:x.name, vgg.gate_var_list)
 
         valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
