@@ -128,11 +128,11 @@ class Vgg19:
         self.gate5 = self.extract_corr_features(self.rcorr5) # Note: gate5 is not necessary for conditional comp
 
         # Confidence of gates
-        self.conf1 = self.confidence(self.gate1, 'conf1')
-        self.conf2 = self.confidence(self.gate2, 'conf2')
-        self.conf3 = self.confidence(self.gate3, 'conf3')
-        self.conf4 = self.confidence(self.gate4, 'conf4')
-        self.conf5 = self.confidence(self.gate5, 'conf5')
+        self.conf1 = self.confidence_layer(self.gate1, 'conf1')
+        self.conf2 = self.confidence_layer(self.gate2, 'conf2')
+        self.conf3 = self.confidence_layer(self.gate3, 'conf3')
+        self.conf4 = self.confidence_layer(self.gate4, 'conf4')
+        self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
         # Prediction and loss
         self.prediction = ((self.conf1 * self.rcorr1 +
@@ -143,7 +143,7 @@ class Vgg19:
                             (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
         # TODO: add computation cost
-        self.loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.prediction)))
+        self.loss = self.weighted_logistic_loss(ground_truth, self.prediction)
 
         #self.loss1 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr1)))
         #self.loss2 = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr2)))
@@ -155,6 +155,8 @@ class Vgg19:
         #self.loss = self.loss1 + self.loss2 + self.loss3 + self.loss4 + self.loss5
 
         self.data_dict = None
+
+    ## Custom layers
 
     def avg_pool(self, bottom, name):
         return tf.nn.avg_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name=name)
@@ -174,7 +176,6 @@ class Vgg19:
 
     def cross_corr_layer(self, key_pool, search_pool, name):
         with tf.variable_scope(name):
-            # TODO: maybe batch norm instead?
             key_mean, key_var = tf.nn.moments(key_pool, [1,2,3], keep_dims=True)
             key_white = (key_pool - key_mean) / (tf.sqrt(key_var) + 0.0001)
             search_mean, search_var = tf.nn.moments(search_pool, [1,2,3], keep_dims=True)
@@ -186,20 +187,60 @@ class Vgg19:
                     [1, 1, 1, 1],
                     padding='SAME')
 
-            # TODO: these are never tuned if we don't fine tune
+            # NOTE: these are never tuned if we don't fine tune
             corr_bias = self.get_var(name, [1], 0, name + "_bias")
             bias = tf.nn.bias_add(cross_corr, corr_bias)
+            output = tf.tanh(bias)
 
-            corr_mean, corr_var = tf.nn.moments(bias, [1,2,3], keep_dims=True)
-            corr_norm = (bias - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
+            #corr_mean, corr_var = tf.nn.moments(bias, [1,2,3], keep_dims=True)
+            #corr_norm = (bias - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
 
-            return corr_norm
+            return output
+
+    # TODO: add more features
+    def extract_corr_features(self, corr):
+        # Kurtosis
+        corr_mean, corr_var = tf.nn.moments(corr, [1,2,3])
+        kurt = tf.pow(corr_mean, tf.constant(4.0)) / tf.pow(corr_var, tf.constant(2.0))
+
+        # Max peak
+        max_peak = tf.reduce_max(corr, axis=[1,2,3])
+
+        return tf.stack([kurt, max_peak], axis=1)
+
+    def confidence_layer(self, gate, name):
+        with tf.variable_scope(name):
+            input_dim = gate.shape[1].value
+            weights, bias = self.get_gate_var(name, input_dim)
+            muled = tf.matmul(gate, weights)
+            output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
+            return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
+
+    def weighted_logistic_loss(ground_truth, prediction):
+        print ground_truth.shape
+        print ground_truth.get_shape()
+        scale = (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
+        weight = tf.select(ground_truth > 0, tf.fill(ground_truth.shape,
+        loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.prediction)))
+
+        return loss
+
+    ## Variable handlers
 
     def get_conv_var(self, filter_size, in_channels, out_channels, name):
         filters = self.get_var(name, [filter_size, filter_size, in_channels, out_channels], 0, name + "_filters")
         biases = self.get_var(name, [out_channels], 1, name + "_biases")
 
         return filters, biases
+
+    def get_gate_var(self, name, input_dim):
+        weights = self.get_var(name, [input_dim, 1], 0, name + '_weights')
+        bias = self.get_var(name, [1], 1, name + '_bias')
+
+        self.gate_var_list.append(weights)
+        self.gate_var_list.append(bias)
+
+        return weights, bias
 
     def get_var(self, name, shape, idx, var_name):
         try:
@@ -218,34 +259,6 @@ class Vgg19:
 
         self.var_dict[(name, idx)] = var
         return var
-
-    # TODO: add more features
-    def extract_corr_features(self, corr):
-        # Kurtosis
-        corr_mean, corr_var = tf.nn.moments(corr, [1,2,3])
-        kurt = tf.pow(corr_mean, tf.constant(4.0)) / tf.pow(corr_var, tf.constant(2.0))
-
-        # Max peak
-        max_peak = tf.reduce_max(corr, axis=[1,2,3])
-
-        return tf.stack([kurt, max_peak], axis=1)
-
-    def confidence(self, gate, name):
-        with tf.variable_scope(name):
-            input_dim = gate.shape[1].value
-            weights, bias = self.get_gate_var(name, input_dim)
-            muled = tf.matmul(gate, weights)
-            output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
-            return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
-
-    def get_gate_var(self, name, input_dim):
-        weights = self.get_var(name, [input_dim, 1], 0, name + '_weights')
-        bias = self.get_var(name, [1], 1, name + '_bias')
-
-        self.gate_var_list.append(weights)
-        self.gate_var_list.append(bias)
-
-        return weights, bias
 
     def save_npy(self, sess, npy_path="./vgg19-save.npy"):
         assert isinstance(sess, tf.Session)
