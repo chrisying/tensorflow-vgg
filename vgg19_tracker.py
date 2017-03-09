@@ -210,7 +210,7 @@ class Vgg19:
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
             return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
 
-    def weighted_logistic_loss(ground_truth, prediction):
+    def weighted_logistic_loss(self, ground_truth, prediction):
         print ground_truth.shape
         print ground_truth.get_shape()
         scale = (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
