@@ -213,7 +213,7 @@ class Vgg19:
     def weighted_logistic_loss(self, ground_truth, prediction):
         scale = (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
         weight = tf.where(ground_truth > 0, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
-        loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.prediction)) * weight)
+        loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * prediction)) * weight)
 
         return loss
 
