@@ -46,14 +46,14 @@ def load_batch(category, key_name):
             og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y-EPSILON, -true_center_x:SEARCH_FRAME_SIZE-true_center_x-EPSILON]
             mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
             if mask.shape[0] != SEARCH_FRAME_SIZE or mask.shape[1] != SEARCH_FRAME_SIZE:
-                print '-----WARNING!-----'
-                print 'mask size mismatch'
-                print category, key_name, search_line
-                print true_center_x, true_center_y
-                print mask.shape
-		print og_y.shape, og_x.shape
-		print -true_center_x, SEARCH_FRAME_SIZE-true_center_x
-                print '------------------'
+                #print '-----WARNING!-----'
+                #print 'mask size mismatch'
+                #print category, key_name, search_line
+                #print true_center_x, true_center_y
+                #print mask.shape
+		#print og_y.shape, og_x.shape
+		#print -true_center_x, SEARCH_FRAME_SIZE-true_center_x
+                #print '------------------'
             ground_truth[s_idx, :, :, :][mask] = 1
 
             s_idx += 1
@@ -176,13 +176,13 @@ def main():
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
 
                     if not np.isfinite(loss):
-                        print '-----WARNING-----'
-                        print 'Loss non-finite at %s %s' % (train_cat, key_name)
-                        r1, r2, r3, r4, r5, l1, l2, l3, l4, l5 = sess.run([vgg.rcorr1, vgg.loss, vgg.loss1],
-                                 feed_dict={key_image: key, search_image: search, ground_truth: ground})
-                        np.save('nonfinite.npy', {'r1':r1, 'r2':r2, 'r3':r3, 'r4':r4, 'r5':r5, 'l1':l1, 'l2':l2, 'l3':l3, 'l4':l4, 'l5':l5})
-                        sys.exit()
-                        print '-----------------'
+                        #print '-----WARNING-----'
+                        #print 'Loss non-finite at %s %s' % (train_cat, key_name)
+                        #r1, r2, r3, r4, r5, l1, l2, l3, l4, l5 = sess.run([vgg.rcorr1, vgg.loss, vgg.loss1],
+                        #         feed_dict={key_image: key, search_image: search, ground_truth: ground})
+                        #np.save('nonfinite.npy', {'r1':r1, 'r2':r2, 'r3':r3, 'r4':r4, 'r5':r5, 'l1':l1, 'l2':l2, 'l3':l3, 'l4':l4, 'l5':l5})
+                        #sys.exit()
+                        #print '-----------------'
 
                     cat_loss_sum += loss
                     #print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
@@ -196,13 +196,16 @@ def main():
             valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
             print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
 
+            # save model
+            vgg.save_npy(sess, './trained_model_epoch_%d_%s.npy' % (epoch+1, str(int(time.time()))))
+
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
 
         diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
 
         # save model
-        vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
 
 if __name__ == '__main__':
     main()
