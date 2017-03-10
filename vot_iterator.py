@@ -1,5 +1,7 @@
 # Scan through VOT dataset for various reasons
 
+from PIL import Image
+
 import os
 
 from CONSTANTS import *
@@ -23,6 +25,8 @@ with open(os.path.join(VOT_DIR, 'list.txt')) as list_txt:
                 max_height = max(max_height, height)
                 sum_width += width
                 sum_height += height
+        im1 = Image.open(os.path.join(cat_dir, '00000001.png'))
+        print im1.size
 
 print 'Max box: (%d, %d)' % (max_width, max_height)
 print 'Avg box: (%d, %d)' % (sum_width/num_images, sum_height/num_images)
