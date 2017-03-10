@@ -25,7 +25,7 @@ with open(os.path.join(VOT_DIR, 'list.txt')) as list_txt:
                 max_height = max(max_height, height)
                 sum_width += width
                 sum_height += height
-        im1 = Image.open(os.path.join(cat_dir, '00000001.png'))
+        im1 = Image.open(os.path.join(cat_dir, '00000001.jpg'))
         print im1.size
 
 print 'Max box: (%d, %d)' % (max_width, max_height)
