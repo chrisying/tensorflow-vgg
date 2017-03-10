@@ -69,7 +69,7 @@ def run_validation(sess, vgg, k, s, g):
     test_loss_sum = 0.0
     num_samples = 0
     for category in TEST_CATS:
-        print 'Running validation on %s' % category
+        #print 'Running validation on %s' % category
         data_dir = os.path.join(PROCESSED_DIR, category)
         key_names = os.listdir(data_dir)
         for key_name in key_names:
