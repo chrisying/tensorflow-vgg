@@ -172,7 +172,7 @@ def main():
                     if train_cat == 'tiger' and key_name == 'key-00000121':
                         visualize_corr_maps(sess, vgg, 'tiger-00000121.png', key_image, search_image, ground_truth,
                                             key[:,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
-                    _, loss = sess.run([train_finetune, vgg.loss],
+                    _, loss = sess.run([train_finetune, vgg.raw_loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
 
                     #if not np.isfinite(loss):
