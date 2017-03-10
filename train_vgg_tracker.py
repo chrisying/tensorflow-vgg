@@ -45,15 +45,15 @@ def load_batch(category, key_name):
             true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
             og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y-EPSILON, -true_center_x:SEARCH_FRAME_SIZE-true_center_x-EPSILON]
             mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
-            if mask.shape[0] != SEARCH_FRAME_SIZE or mask.shape[1] != SEARCH_FRAME_SIZE:
-                #print '-----WARNING!-----'
-                #print 'mask size mismatch'
-                #print category, key_name, search_line
-                #print true_center_x, true_center_y
-                #print mask.shape
-		#print og_y.shape, og_x.shape
-		#print -true_center_x, SEARCH_FRAME_SIZE-true_center_x
-                #print '------------------'
+            #if mask.shape[0] != SEARCH_FRAME_SIZE or mask.shape[1] != SEARCH_FRAME_SIZE:
+            #    print '-----WARNING!-----'
+            #    print 'mask size mismatch'
+            #    print category, key_name, search_line
+            #    print true_center_x, true_center_y
+            #    print mask.shape
+	    #    print og_y.shape, og_x.shape
+	    #    print -true_center_x, SEARCH_FRAME_SIZE-true_center_x
+            #    print '------------------'
             ground_truth[s_idx, :, :, :][mask] = 1
 
             s_idx += 1
@@ -175,14 +175,14 @@ def main():
                     _, loss = sess.run([train_finetune, vgg.loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
 
-                    if not np.isfinite(loss):
-                        #print '-----WARNING-----'
-                        #print 'Loss non-finite at %s %s' % (train_cat, key_name)
-                        #r1, r2, r3, r4, r5, l1, l2, l3, l4, l5 = sess.run([vgg.rcorr1, vgg.loss, vgg.loss1],
-                        #         feed_dict={key_image: key, search_image: search, ground_truth: ground})
-                        #np.save('nonfinite.npy', {'r1':r1, 'r2':r2, 'r3':r3, 'r4':r4, 'r5':r5, 'l1':l1, 'l2':l2, 'l3':l3, 'l4':l4, 'l5':l5})
-                        #sys.exit()
-                        #print '-----------------'
+                    #if not np.isfinite(loss):
+                    #    print '-----WARNING-----'
+                    #    print 'Loss non-finite at %s %s' % (train_cat, key_name)
+                    #    r1, r2, r3, r4, r5, l1, l2, l3, l4, l5 = sess.run([vgg.rcorr1, vgg.loss, vgg.loss1],
+                    #             feed_dict={key_image: key, search_image: search, ground_truth: ground})
+                    #    np.save('nonfinite.npy', {'r1':r1, 'r2':r2, 'r3':r3, 'r4':r4, 'r5':r5, 'l1':l1, 'l2':l2, 'l3':l3, 'l4':l4, 'l5':l5})
+                    #    sys.exit()
+                    #    print '-----------------'
 
                     cat_loss_sum += loss
                     #print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
