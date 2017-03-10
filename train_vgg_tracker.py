@@ -75,7 +75,7 @@ def run_validation(sess, vgg, k, s, g):
         for key_name in key_names:
             #print 'Running validation on %s' % key_name
             key, search, ground = load_batch(category, key_name)
-            loss = sess.run(vgg.loss, feed_dict={k: key, s: search, g: ground})
+            loss = sess.run(vgg.raw_loss, feed_dict={k: key, s: search, g: ground})
             #print '[VALID] Batch loss on %s %s: %.5f' % (category, key_name, loss)
             test_loss_sum += loss
             num_samples += 1
