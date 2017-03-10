@@ -196,13 +196,14 @@ def main():
             valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
             print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
 
-            # save model
+            # checkpointing
+            diagnostic_corr_maps(sess, vgg, 'epoch_%d_corr_maps.png' % (epoch+1), key_image, search_image, ground_truth)
             vgg.save_npy(sess, './trained_model_epoch_%d_%s.npy' % (epoch+1, str(int(time.time()))))
 
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
 
-        diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
+        #diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
 
         # save model
         #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
