@@ -141,7 +141,8 @@ def main():
         # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
         print vgg.get_var_count()
 
-        train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
+        #train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
+        train_finetune = tf.train.GradientDescentOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
         train_gate = tf.train.AdamOptimizer(1e-5).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
         sess.run(tf.global_variables_initializer())
 
