@@ -159,7 +159,7 @@ def main():
         cat_loss_sum = 0.0
         for key_name in key_names:
             # ordering shouldn't matter
-            key, search, ground = load_batch(train_cat, key_name)
+            key, search, ground = load_batch(cat, key_name)
             _, loss = sess.run([train_finetune, vgg.raw_loss],
                     feed_dict={key_image: key, search_image: search, ground_truth: ground})
 
