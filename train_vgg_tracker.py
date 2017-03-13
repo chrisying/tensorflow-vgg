@@ -153,7 +153,7 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
-        cat = TRAIN_CAT[0]
+        cat = TRAIN_CATS[0]
         cat_dir = os.path.join(PROCESSED_DIR, cat)
         key_names = os.listdir(cat_dir)
         cat_loss_sum = 0.0
