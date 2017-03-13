@@ -146,13 +146,26 @@ def main():
         train_gate = tf.train.AdamOptimizer(1e-5).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
         sess.run(tf.global_variables_initializer())
 
-        diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
-
         print 'Trainable variables (finetune):'
         print map(lambda x:x.name, vgg.cnn_var_list)
         print 'Trainable variables (gate):'
         print map(lambda x:x.name, vgg.gate_var_list)
 
+        diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
+
+        cat = TRAIN_CAT[0]
+        cat_dir = os.path.join(PROCESSED_DIR, cat)
+        key_names = os.listdir(cat_dir)
+        cat_loss_sum = 0.0
+        for key_name in key_names:
+            # ordering shouldn't matter
+            key, search, ground = load_batch(train_cat, key_name)
+            _, loss = sess.run([train_finetune, vgg.raw_loss],
+                    feed_dict={key_image: key, search_image: search, ground_truth: ground})
+
+        diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
+
+        '''
         valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
 
@@ -208,6 +221,7 @@ def main():
 
         # save model
         #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        '''
 
 if __name__ == '__main__':
     main()
