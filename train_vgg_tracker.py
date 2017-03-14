@@ -162,11 +162,8 @@ def main():
             _, loss = sess.run([train_finetune, vgg.raw_loss],
                     feed_dict={key_image: key, search_image: search, ground_truth: ground})
 
-        diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
-
-        '''
-        valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-        print '[VALID] Initial validation loss: %.5f' % valid_loss
+        #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+        #print '[VALID] Initial validation loss: %.5f' % valid_loss
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
@@ -182,8 +179,8 @@ def main():
                     key, search, ground = load_batch(train_cat, key_name)
 
                     # Random frame in middle of training to test on
-                    if train_cat == 'tiger' and key_name == 'key-00000121':
-                        visualize_corr_maps(sess, vgg, 'tiger-00000121.png', key_image, search_image, ground_truth,
+                    if train_cat == 'dinosaur' and key_name == 'key-00000121':
+                        visualize_corr_maps(sess, vgg, 'dinosaur-00000121.png', key_image, search_image, ground_truth,
                                             key[:,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
                     _, loss = sess.run([train_finetune, vgg.raw_loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
