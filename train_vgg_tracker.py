@@ -217,7 +217,6 @@ def main():
 
         # save model
         #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
-        '''
 
 if __name__ == '__main__':
     main()
