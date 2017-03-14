@@ -194,7 +194,7 @@ class Vgg19:
             #corr_mean, corr_var = tf.nn.moments(bias, [1,2,3], keep_dims=True)
             #corr_norm = (bias - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
 
-            return bias, cross_white
+            return bias, corr_white
 
     # TODO: add more features
     def extract_corr_features(self, corr):
