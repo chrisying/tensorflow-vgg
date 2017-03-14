@@ -142,7 +142,7 @@ def main():
         print vgg.get_var_count()
 
         #train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
-        train_finetune = tf.train.GradientDescentOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
+        train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
         train_gate = tf.train.AdamOptimizer(1e-5).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
         sess.run(tf.global_variables_initializer())
 
@@ -158,7 +158,7 @@ def main():
         key_names = os.listdir(cat_dir)
         cat_loss_sum = 0.0
         for key_name in key_names:
-            key, search, ground = load_batch(cat, key_name)
+            key, search, ground = load_batch(cat, key_names[0])
             _, loss = sess.run([train_finetune, vgg.raw_loss],
                     feed_dict={key_image: key, search_image: search, ground_truth: ground})
 
