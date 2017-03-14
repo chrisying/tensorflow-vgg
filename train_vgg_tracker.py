@@ -92,13 +92,10 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_img):
     # Expects key_img, search_img, ground_img to be batch size 1
-    [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, deb] = sess.run(
+    [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
             [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
-             vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5, vgg.b1],
+             vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5],
             feed_dict={k: key_img, s: search_img, g: ground_img})
-    print deb
-    print np.min(deb)
-    print np.max(deb)
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
@@ -156,7 +153,6 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
-        '''
         cat = TRAIN_CATS[0]
         cat_dir = os.path.join(PROCESSED_DIR, cat)
         key_names = os.listdir(cat_dir)
@@ -168,6 +164,7 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
 
+        '''
         valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
         print '[VALID] Initial validation loss: %.5f' % valid_loss
 
