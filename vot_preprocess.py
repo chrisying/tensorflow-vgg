@@ -2,7 +2,7 @@
 Preprocess images in VOT2016 by:
     - Taking the first frame per MAX_FRAME_GAP frames as the key frame
     - Process to KEY_FRAME_SIZE
-        - Pad at least w+h/4
+        - Pad at least w+h/8
         - Paste onto averge RGB background (if necessary)
         - Crop
         - Resize
@@ -42,7 +42,7 @@ def get_mean_rgb(im):
 def extract_key_frame(im, x, y, w, h):
     im_w, im_h = im.size
 
-    pad = (w + h) / 4
+    pad = (w + h) / 8
     key_size = max(w + 2*pad, h + 2*pad)
     new_x = x + w/2 - key_size / 2
     new_y = y + h/2 - key_size / 2
