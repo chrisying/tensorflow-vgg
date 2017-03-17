@@ -107,10 +107,10 @@ class Vgg19:
         self.search_pool5 = self.max_pool(self.search_conv5_4, 'pool5')
 
         # Cross correlation layers
-        self.corr1 = self.cross_corr_layer(self.max_pool_n(self.key_pool1, 4, "cpool1_1"), self.max_pool_n(self.search_pool1, 4, "cpool1_2"), "corr1")
-        self.corr2 = self.cross_corr_layer(self.max_pool_n(self.key_pool2, 3, "cpool2_1"), self.max_pool_n(self.search_pool2, 3, "cpool2_2"), "corr2")
-        self.corr3 = self.cross_corr_layer(self.max_pool_n(self.key_pool3, 2, "cpool3_1"), self.max_pool_n(self.search_pool3, 2, "cpool3_2"), "corr3")
-        self.corr4 = self.cross_corr_layer(self.max_pool_n(self.key_pool4, 1, "cpool4_1"), self.max_pool_n(self.search_pool4, 1, "cpool4_2"), "corr4")
+        self.corr1 = self.cross_corr_layer(self.max_pool_n(self.key_pool1, "cpool1_1", 4), self.max_pool_n(self.search_pool1, "cpool1_2", 4), "corr1")
+        self.corr2 = self.cross_corr_layer(self.max_pool_n(self.key_pool2, "cpool2_1", 3), self.max_pool_n(self.search_pool2, "cpool2_2", 3), "corr2")
+        self.corr3 = self.cross_corr_layer(self.max_pool_n(self.key_pool3, "cpool3_1", 2), self.max_pool_n(self.search_pool3, "cpool3_2", 2), "corr3")
+        self.corr4 = self.cross_corr_layer(self.max_pool_n(self.key_pool4, "cpool4_1", 1), self.max_pool_n(self.search_pool4, "cpool4_2", 1), "corr4")
         self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5") # corr5 is full sized
 
         # Loss
