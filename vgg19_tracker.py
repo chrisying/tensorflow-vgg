@@ -107,11 +107,11 @@ class Vgg19:
         self.search_pool5 = self.max_pool(self.search_conv5_4, 'pool5')
 
         # Cross correlation layers
-        self.corr1 = self.cross_corr_layer(self.key_pool1, self.search_pool1, "corr1")
-        self.corr2 = self.cross_corr_layer(self.key_pool2, self.search_pool2, "corr2")
-        self.corr3 = self.cross_corr_layer(self.key_pool3, self.search_pool3, "corr3")
-        self.corr4 = self.cross_corr_layer(self.key_pool4, self.search_pool4, "corr4")
-        self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5")
+        self.corr1 = self.cross_corr_layer(self.max_pool_n(self.key_pool1, 4, "cpool1_1"), self.max_pool_n(self.search_pool1, 4, "cpool1_2"), "corr1")
+        self.corr2 = self.cross_corr_layer(self.max_pool_n(self.key_pool2, 3, "cpool2_1"), self.max_pool_n(self.search_pool2, 3, "cpool2_2"), "corr2")
+        self.corr3 = self.cross_corr_layer(self.max_pool_n(self.key_pool3, 2, "cpool3_1"), self.max_pool_n(self.search_pool3, 2, "cpool3_2"), "corr3")
+        self.corr4 = self.cross_corr_layer(self.max_pool_n(self.key_pool4, 1, "cpool4_1"), self.max_pool_n(self.search_pool4, 1, "cpool4_2"), "corr4")
+        self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5") # corr5 is full sized
 
         # Loss
         # TODO: maybe experiment with learned upsampling via deconvolution
@@ -158,6 +158,10 @@ class Vgg19:
 
     def max_pool(self, bottom, name):
         return tf.nn.max_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name=name)
+
+    def max_pool_n(self, bottom, name, n):
+        # Max pool by factor of 2, n times
+        return tf.nn.max_pool(bottom, ksize=[1, 2**n, 2**n, 1], strides=[1, 2**n, 2**n, 1], padding='SAME', name=name)
 
     def conv_layer(self, bottom, in_channels, out_channels, name):
         with tf.variable_scope(name):
