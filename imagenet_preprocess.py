@@ -147,6 +147,8 @@ def main():
                     search_filename = '%s.xml' % search_frame_name
                     search_tree = ET.parse(os.path.join(vid_dir, search_filename))
                     search_root = search_tree.getroot()
+                    if not (search_root[4].tag == 'object' and search_root[4][0].text == '0'):
+                        print vid_dir, search_filename
                     assert(search_root[4].tag == 'object' and search_root[4][0].text == '0')
                     sx, sy, sw, sh = convert_to_xywh(search_root[4][2])
                     offset_x = (sx + sw/2) - (x + w/2)
