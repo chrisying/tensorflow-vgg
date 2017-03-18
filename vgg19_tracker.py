@@ -106,12 +106,25 @@ class Vgg19:
         self.search_conv5_4 = self.conv_layer(self.search_conv5_3, 512, 512, "conv5_4")
         self.search_pool5 = self.max_pool(self.search_conv5_4, 'pool5')
 
+        # Downsampled feature maps
+        self.rkey_pool1 = self.max_pool_n(self.key_pool1, "cpool1_1", 4)
+        self.rkey_pool2 = self.max_pool_n(self.key_pool2, "cpool2_1", 3)
+        self.rkey_pool3 = self.max_pool_n(self.key_pool3, "cpool3_1", 2)
+        self.rkey_pool4 = self.max_pool_n(self.key_pool4, "cpool4_1", 1)
+        self.rkey_pool5 = self.key_pool5
+
+        self.rsearch_pool1 = self.max_pool_n(self.search_pool1, "cpool1_2", 4)
+        self.rsearch_pool2 = self.max_pool_n(self.search_pool2, "cpool2_2", 3)
+        self.rsearch_pool3 = self.max_pool_n(self.search_pool3, "cpool3_2", 2)
+        self.rsearch_pool4 = self.max_pool_n(self.search_pool4, "cpool4_2", 1)
+        self.rsearch_pool5 = self.search_pool5
+
         # Cross correlation layers
-        self.corr1 = self.cross_corr_layer(self.max_pool_n(self.key_pool1, "cpool1_1", 4), self.max_pool_n(self.search_pool1, "cpool1_2", 4), "corr1")
-        self.corr2 = self.cross_corr_layer(self.max_pool_n(self.key_pool2, "cpool2_1", 3), self.max_pool_n(self.search_pool2, "cpool2_2", 3), "corr2")
-        self.corr3 = self.cross_corr_layer(self.max_pool_n(self.key_pool3, "cpool3_1", 2), self.max_pool_n(self.search_pool3, "cpool3_2", 2), "corr3")
-        self.corr4 = self.cross_corr_layer(self.max_pool_n(self.key_pool4, "cpool4_1", 1), self.max_pool_n(self.search_pool4, "cpool4_2", 1), "corr4")
-        self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5") # corr5 is full sized
+        self.corr1 = self.cross_corr_layer(self.rkey_pool1, self.rsearch_pool1, "corr1")
+        self.corr2 = self.cross_corr_layer(self.rkey_pool2, self.rsearch_pool2, "corr2")
+        self.corr3 = self.cross_corr_layer(self.rkey_pool3, self.rsearch_pool3, "corr3")
+        self.corr4 = self.cross_corr_layer(self.rkey_pool4, self.rsearch_pool4, "corr4")
+        self.corr5 = self.cross_corr_layer(self.rkey_pool5, self.rsearch_pool5, "corr5")
 
         # Loss
         # TODO: maybe experiment with learned upsampling via deconvolution
@@ -121,12 +134,12 @@ class Vgg19:
         self.rcorr4 = tf.image.resize_bilinear(self.corr4, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
         self.rcorr5 = tf.image.resize_bilinear(self.corr5, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
 
-        # Gating feature vectors
-        self.gate1 = self.extract_corr_features(self.rcorr1)
-        self.gate2 = self.extract_corr_features(self.rcorr2)
-        self.gate3 = self.extract_corr_features(self.rcorr3)
-        self.gate4 = self.extract_corr_features(self.rcorr4)
-        self.gate5 = self.extract_corr_features(self.rcorr5) # Note: gate5 is not necessary for conditional comp
+        # Gating feature vectors from pre-resized feature maps
+        self.gate1 = self.extract_corr_features(self.corr1)
+        self.gate2 = self.extract_corr_features(self.corr2)
+        self.gate3 = self.extract_corr_features(self.corr3)
+        self.gate4 = self.extract_corr_features(self.corr4)
+        self.gate5 = self.extract_corr_features(self.corr5) # Note: gate5 is not necessary for conditional comp
 
         # Confidence of gates
         self.conf1 = self.confidence_layer(self.gate1, 'conf1')
@@ -201,15 +214,18 @@ class Vgg19:
             return bias
 
     # TODO: add more features
-    def extract_corr_features(self, corr):
+    def extract_corr_features(self, corr, corr_size):
         # Kurtosis
         corr_mean, corr_var = tf.nn.moments(corr, [1,2,3])
-        kurt = tf.pow(corr_mean, tf.constant(4.0)) / tf.pow(corr_var, tf.constant(2.0))
+        kurt = tf.pow(corr_mean, tf.constant(4.0)) / tf.pow(corr_var, tf.constant(2.0)) # B x 1
 
-        # Max peak
-        max_peak = tf.reduce_max(corr, axis=[1,2,3])
+        # Top 5 peaks (raw)
+        peaks, _ = tf.nn.top_k(corr, tf.reshape(corr, [-1, corr_size ** 2]), k=5) # B x 5
 
-        return tf.stack([kurt, max_peak], axis=1)
+        # Top 5 peaks (after NMS)
+        # TODO
+
+        return tf.concat([kurt, peaks], axis=1)
 
     def confidence_layer(self, gate, name):
         with tf.variable_scope(name):
@@ -225,6 +241,15 @@ class Vgg19:
         loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * prediction)) * weight)
 
         return loss
+
+    def non_max_suppression(self, input, window_size):
+        # input = B x W x H x C
+        # NOTE: if input is negative, suppressed values are larger than max value
+        pooled = tf.nn.max_pool(input, ksize=[1, window_size, window_size, 1], strides=[1, 1, 1, 1], padding='SAME')
+        output = tf.where(tf.equal(input, pooled), input, tf.zeros_like(input))
+
+        # output = B x W x H x C
+        return output
 
     ## Variable handlers
 
