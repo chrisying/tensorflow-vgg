@@ -105,7 +105,7 @@ def main():
             annots = os.listdir(vid_dir)
             num_frames = len(annots)
 
-            output_dir = os.path.join(IMAGENET_PROCESSED_DIR, d, v)
+            output_dir = os.path.join(IMVID_PROCESSED_DIR, d, v)
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
 
@@ -114,7 +114,7 @@ def main():
                 key_frame_idx = block_idx * KEY_FRAME_GAP
                 key_frame_name = str(key_frame_idx).zfill(6)
 
-                key_dir = os.path.join(IMAGENET_PROCESSED_DIR, 'key-%s' % key_frame_name)
+                key_dir = os.path.join(output_dir, 'key-%s' % key_frame_name)
                 if not os.path.exists(key_dir):
                     os.makedirs(key_dir)
 
@@ -122,7 +122,7 @@ def main():
                 tree = ET.parse(os.path.join(vid_dir, annot_filename))
                 root = tree.getroot()
 
-                key_im = Image.open(os.path.join(data_path, v, '%s' % key_frame_name))
+                key_im = Image.open(os.path.join(data_path, v, '%s.jpg' % key_frame_name))
                 assert(root[4].tag == 'object' and root[4][0].text == '0')
                 x, y, w, h = convert_to_xywh(root[4][2])
                 new_key_im, scale = extract_key_frame(key_im, x, y, w, h)
@@ -139,7 +139,7 @@ def main():
                     if search_frame_idx > num_frames:
                         break
                     search_frame_name = str(search_frame_idx).zfill(6)
-                    search_im = Image.open(os.path.join(data_path, v, '%s' % search_frame_name))
+                    search_im = Image.open(os.path.join(data_path, v, '%s.jpg' % search_frame_name))
                     new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
                     search_output_name = 'search-%s.png' % (search_frame_name)
                     new_search_im.save(os.path.join(key_dir, search_output_name))
