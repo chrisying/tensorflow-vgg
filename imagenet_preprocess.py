@@ -122,7 +122,7 @@ def main():
                 tree = ET.parse(os.path.join(vid_dir, annot_filename))
                 root = tree.getroot()
 
-                key_im = Image.open(os.path.join(data_path, v, '%s.jpg' % key_frame_name))
+                key_im = Image.open(os.path.join(data_path, v, '%s.JPEG' % key_frame_name))
                 assert(root[4].tag == 'object' and root[4][0].text == '0')
                 x, y, w, h = convert_to_xywh(root[4][2])
                 new_key_im, scale = extract_key_frame(key_im, x, y, w, h)
@@ -139,7 +139,7 @@ def main():
                     if search_frame_idx > num_frames:
                         break
                     search_frame_name = str(search_frame_idx).zfill(6)
-                    search_im = Image.open(os.path.join(data_path, v, '%s.jpg' % search_frame_name))
+                    search_im = Image.open(os.path.join(data_path, v, '%s.JPEG' % search_frame_name))
                     new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
                     search_output_name = 'search-%s.png' % (search_frame_name)
                     new_search_im.save(os.path.join(key_dir, search_output_name))
