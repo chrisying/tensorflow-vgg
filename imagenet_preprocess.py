@@ -124,8 +124,7 @@ def main():
                 root = tree.getroot()
 
                 key_im = Image.open(os.path.join(data_path, v, '%s.JPEG' % key_frame_name))
-                assert(root[4].tag == 'object')
-                if root[4][0].text != '0':
+                if len(root) < 5 or root[4][0].text != '0':
                     # only track the first object in each vid
                     print 'Object not in frame %s' % key_frame_name
                     continue
@@ -150,8 +149,7 @@ def main():
                     search_filename = '%s.xml' % search_frame_name
                     search_tree = ET.parse(os.path.join(vid_dir, search_filename))
                     search_root = search_tree.getroot()
-                    assert(search_root[4].tag == 'object')
-                    if search_root[4][0] != '0':
+                    if len(search_root) < 5 or search_root[4][0].text != '0':
                         print 'Object out of frame in %s, at %s frames' % (key_frame_name, img_idx)
                         continue    # will continue if object re-enters frame
 
