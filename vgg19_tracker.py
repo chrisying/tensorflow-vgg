@@ -221,7 +221,7 @@ class Vgg19:
         kurt = tf.pow(corr_mean, tf.constant(4.0)) / tf.pow(corr_var, tf.constant(2.0)) # B x 1
 
         # Top 5 peaks (raw)
-        peaks, _ = tf.nn.top_k(corr, tf.reshape(corr, [-1, corr_size ** 2]), k=5) # B x 5
+        peaks, _ = tf.nn.top_k(tf.reshape(corr, [-1, corr_size ** 2]), k=5) # B x 5
 
         # Top 5 peaks (after NMS)
         # TODO
