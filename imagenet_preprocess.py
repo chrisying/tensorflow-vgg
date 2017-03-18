@@ -30,11 +30,11 @@ from PIL import Image, ImageOps
 from CONSTANTS import *
 
 def convert_to_xywh(elem):
-    xmax, xmin, ymax, ymin = elem[0], elem[1], elem[2], elem[3]
+    xmax, xmin, ymax, ymin = map(lambda x:float(x.text), elem)
     x = (xmin + xmax) / 2.0
     y = (ymin + ymax) / 2.0
-    w = float(xmax - xmin)
-    h = float(ymax - ymin)
+    w = xmax - xmin
+    h = ymax - ymin
     return x, y, w, h
 
 def get_mean_rgb(im):
