@@ -102,6 +102,7 @@ def main():
         vids = os.listdir(annot_path)
         for v in vids:
             vid_dir = os.path.join(annot_path, v)
+            print 'Processing %s' % vid_dir
             annots = os.listdir(vid_dir)
             num_frames = len(annots)
 
@@ -123,7 +124,11 @@ def main():
                 root = tree.getroot()
 
                 key_im = Image.open(os.path.join(data_path, v, '%s.JPEG' % key_frame_name))
-                assert(root[4].tag == 'object' and root[4][0].text == '0')
+                assert(root[4].tag == 'object')
+                if root[4][0].text != '0':
+                    # only track the first object in each vid
+                    print 'Object not in frame %s' % key_frame_name
+                    continue
                 x, y, w, h = convert_to_xywh(root[4][2])
                 new_key_im, scale = extract_key_frame(key_im, x, y, w, h)
                 key_output_name = 'key-%s.png' % key_frame_name
@@ -138,23 +143,29 @@ def main():
                     search_frame_idx = key_frame_idx + img_idx + 1
                     if search_frame_idx > num_frames:
                         break
-                    search_frame_name = str(search_frame_idx).zfill(6)
-                    search_im = Image.open(os.path.join(data_path, v, '%s.JPEG' % search_frame_name))
-                    new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
-                    search_output_name = 'search-%s.png' % (search_frame_name)
-                    new_search_im.save(os.path.join(key_dir, search_output_name))
 
+                    search_frame_name = str(search_frame_idx).zfill(6)
+
+                    # Parse bounding box and get offset, skip if object 0 goes out of frame
                     search_filename = '%s.xml' % search_frame_name
                     search_tree = ET.parse(os.path.join(vid_dir, search_filename))
                     search_root = search_tree.getroot()
-                    if not (search_root[4].tag == 'object' and search_root[4][0].text == '0'):
-                        print vid_dir, search_filename
-                    assert(search_root[4].tag == 'object' and search_root[4][0].text == '0')
+                    assert(search_root[4].tag == 'object')
+                    if search_root[4] != '0':
+                        print 'Object out of frame in %s, at %s frames' % (key_frame_name, img_idx)
+                        continue    # will continue if object re-enters frame
+
                     sx, sy, sw, sh = convert_to_xywh(search_root[4][2])
                     offset_x = (sx + sw/2) - (x + w/2)
                     offset_y = (sy + sh/2) - (y + h/2)
                     new_gt.write('search-%s: %.3f %.3f\n' %
                             (search_frame_name, offset_x, offset_y))
+
+                    search_im = Image.open(os.path.join(data_path, v, '%s.JPEG' % search_frame_name))
+                    new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
+                    search_output_name = 'search-%s.png' % (search_frame_name)
+                    new_search_im.save(os.path.join(key_dir, search_output_name))
+
 
                 new_gt.close()
 
