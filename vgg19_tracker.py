@@ -135,11 +135,12 @@ class Vgg19:
         self.rcorr5 = tf.image.resize_bilinear(self.corr5, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
 
         # Gating feature vectors from pre-resized feature maps
-        self.gate1 = self.extract_corr_features(self.corr1)
-        self.gate2 = self.extract_corr_features(self.corr2)
-        self.gate3 = self.extract_corr_features(self.corr3)
-        self.gate4 = self.extract_corr_features(self.corr4)
-        self.gate5 = self.extract_corr_features(self.corr5) # Note: gate5 is not necessary for conditional comp
+        # TODO: don't hardcode 2**5
+        self.gate1 = self.extract_corr_features(self.corr1, SEARCH_FRAME_SIZE / 2 ** 5)
+        self.gate2 = self.extract_corr_features(self.corr2, SEARCH_FRAME_SIZE / 2 ** 5)
+        self.gate3 = self.extract_corr_features(self.corr3, SEARCH_FRAME_SIZE / 2 ** 5)
+        self.gate4 = self.extract_corr_features(self.corr4, SEARCH_FRAME_SIZE / 2 ** 5)
+        self.gate5 = self.extract_corr_features(self.corr5, SEARCH_FRAME_SIZE / 2 ** 5)
 
         # Confidence of gates
         self.conf1 = self.confidence_layer(self.gate1, 'conf1')
