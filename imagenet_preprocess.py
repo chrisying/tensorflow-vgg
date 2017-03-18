@@ -141,7 +141,7 @@ def main():
                 # Process search frames
                 for img_idx in range(MAX_FRAME_GAP):
                     search_frame_idx = key_frame_idx + img_idx + 1
-                    if search_frame_idx > num_frames:
+                    if search_frame_idx >= num_frames:
                         break
 
                     search_frame_name = str(search_frame_idx).zfill(6)
@@ -151,7 +151,7 @@ def main():
                     search_tree = ET.parse(os.path.join(vid_dir, search_filename))
                     search_root = search_tree.getroot()
                     assert(search_root[4].tag == 'object')
-                    if search_root[4] != '0':
+                    if search_root[4][0] != '0':
                         print 'Object out of frame in %s, at %s frames' % (key_frame_name, img_idx)
                         continue    # will continue if object re-enters frame
 
