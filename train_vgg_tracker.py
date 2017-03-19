@@ -9,6 +9,7 @@ import sys
 import tensorflow as tf
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+import matplotlib.cm as cm
 
 import vgg19_tracker as vgg19
 from CONSTANTS import *
@@ -86,8 +87,8 @@ def convert_corr_map(corr_map):
     corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
     corr_map = (corr_map - np.min(corr_map))
     corr_map = corr_map / (np.max(corr_map) + 0.0001)
-    im = Image.fromarray(np.uint8(corr_map * 255))
-    im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+    im = Image.fromarray(np.uint8(cm.viridis(corr_map * 255)))
+    #im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
     return im
 
 def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_img):

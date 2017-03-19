@@ -77,7 +77,8 @@ class Vgg19:
         self.key_conv5_2 = self.conv_layer(self.key_conv5_1, 512, 512, "conv5_2")
         self.key_conv5_3 = self.conv_layer(self.key_conv5_2, 512, 512, "conv5_3")
         self.key_conv5_4 = self.conv_layer(self.key_conv5_3, 512, 512, "conv5_4")
-        self.key_pool5 = self.max_pool(self.key_conv5_4, 'pool5')
+        #self.key_pool5 = self.max_pool(self.key_conv5_4, 'pool5')
+        self.key_pool5 = self.key_conv5_4   # don't downsample last output, 8 x 8
 
         # Search frame extractor
         self.search_conv1_1 = self.conv_layer(search_bgr, 3, 64, "conv1_1")
@@ -104,20 +105,21 @@ class Vgg19:
         self.search_conv5_2 = self.conv_layer(self.search_conv5_1, 512, 512, "conv5_2")
         self.search_conv5_3 = self.conv_layer(self.search_conv5_2, 512, 512, "conv5_3")
         self.search_conv5_4 = self.conv_layer(self.search_conv5_3, 512, 512, "conv5_4")
-        self.search_pool5 = self.max_pool(self.search_conv5_4, 'pool5')
+        #self.search_pool5 = self.max_pool(self.search_conv5_4, 'pool5')
+        self.search_pool5 = self.search_conv5_4     # don't max pool last output, 16 x 16
 
         # Downsampled feature maps
-        self.rkey_pool1 = self.max_pool_n(self.key_pool1, "cpool1_1", 4)
-        self.rkey_pool2 = self.max_pool_n(self.key_pool2, "cpool2_1", 3)
-        self.rkey_pool3 = self.max_pool_n(self.key_pool3, "cpool3_1", 2)
-        self.rkey_pool4 = self.max_pool_n(self.key_pool4, "cpool4_1", 1)
-        self.rkey_pool5 = self.key_pool5
+        self.key_pool1 = self.max_pool_n(self.key_pool1, "cpool1_1", 3)
+        self.key_pool2 = self.max_pool_n(self.key_pool2, "cpool2_1", 2)
+        self.key_pool3 = self.max_pool_n(self.key_pool3, "cpool3_1", 1)
+        self.key_pool4 = self.key_pool4
+        self.key_pool5 = self.key_pool5
 
-        self.rsearch_pool1 = self.max_pool_n(self.search_pool1, "cpool1_2", 4)
-        self.rsearch_pool2 = self.max_pool_n(self.search_pool2, "cpool2_2", 3)
-        self.rsearch_pool3 = self.max_pool_n(self.search_pool3, "cpool3_2", 2)
-        self.rsearch_pool4 = self.max_pool_n(self.search_pool4, "cpool4_2", 1)
-        self.rsearch_pool5 = self.search_pool5
+        self.search_pool1 = self.max_pool_n(self.search_pool1, "cpool1_2", 3)
+        self.search_pool2 = self.max_pool_n(self.search_pool2, "cpool2_2", 2)
+        self.search_pool3 = self.max_pool_n(self.search_pool3, "cpool3_2", 1)
+        self.search_pool4 = self.search_pool4
+        self.search_pool5 = self.search_pool5
 
         # Cross correlation layers
         self.corr1 = self.cross_corr_layer(self.rkey_pool1, self.rsearch_pool1, "corr1")
@@ -127,20 +129,20 @@ class Vgg19:
         self.corr5 = self.cross_corr_layer(self.rkey_pool5, self.rsearch_pool5, "corr5")
 
         # Loss
-        # TODO: maybe experiment with learned upsampling via deconvolution
-        self.rcorr1 = tf.image.resize_bilinear(self.corr1, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
-        self.rcorr2 = tf.image.resize_bilinear(self.corr2, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
-        self.rcorr3 = tf.image.resize_bilinear(self.corr3, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
-        self.rcorr4 = tf.image.resize_bilinear(self.corr4, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
-        self.rcorr5 = tf.image.resize_bilinear(self.corr5, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        # Upsample to original search size
+        self.rcorr1 = tf.image.resize_nearest_neighbor(self.corr1, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        self.rcorr2 = tf.image.resize_nearest_neighbor(self.corr2, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        self.rcorr3 = tf.image.resize_nearest_neighbor(self.corr3, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        self.rcorr4 = tf.image.resize_nearest_neighbor(self.corr4, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
+        self.rcorr5 = tf.image.resize_nearest_neighbor(self.corr5, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
 
         # Gating feature vectors from pre-resized feature maps
-        # TODO: don't hardcode 2**5
-        self.gate1 = self.extract_corr_features(self.corr1, SEARCH_FRAME_SIZE / 2 ** 5)
-        self.gate2 = self.extract_corr_features(self.corr2, SEARCH_FRAME_SIZE / 2 ** 5)
-        self.gate3 = self.extract_corr_features(self.corr3, SEARCH_FRAME_SIZE / 2 ** 5)
-        self.gate4 = self.extract_corr_features(self.corr4, SEARCH_FRAME_SIZE / 2 ** 5)
-        self.gate5 = self.extract_corr_features(self.corr5, SEARCH_FRAME_SIZE / 2 ** 5)
+        # TODO: don't hardcode 2**4
+        self.gate1 = self.extract_corr_features(self.corr1, SEARCH_FRAME_SIZE / 2 ** 4)
+        self.gate2 = self.extract_corr_features(self.corr2, SEARCH_FRAME_SIZE / 2 ** 4)
+        self.gate3 = self.extract_corr_features(self.corr3, SEARCH_FRAME_SIZE / 2 ** 4)
+        self.gate4 = self.extract_corr_features(self.corr4, SEARCH_FRAME_SIZE / 2 ** 4)
+        self.gate5 = self.extract_corr_features(self.corr5, SEARCH_FRAME_SIZE / 2 ** 4)
 
         # Confidence of gates
         self.conf1 = self.confidence_layer(self.gate1, 'conf1')
