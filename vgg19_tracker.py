@@ -239,7 +239,8 @@ class Vgg19:
             return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
 
     def weighted_logistic_loss(self, ground_truth, prediction):
-        scale = (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
+        lambd = 10.0    # How much more to weight the positive examples
+        scale = lambd * (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
         weight = tf.where(ground_truth > 0, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
         loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * prediction)) * weight)
 
