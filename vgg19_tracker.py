@@ -108,7 +108,7 @@ class Vgg19:
         #self.search_pool5 = self.max_pool(self.search_conv5_4, 'pool5')
         self.search_pool5 = self.search_conv5_4     # don't max pool last output, 16 x 16
 
-        # Downsampled feature maps
+        # Downsampled feature maps to same size
         self.key_pool1 = self.max_pool_n(self.key_pool1, "cpool1_1", 3)
         self.key_pool2 = self.max_pool_n(self.key_pool2, "cpool2_1", 2)
         self.key_pool3 = self.max_pool_n(self.key_pool3, "cpool3_1", 1)
@@ -122,11 +122,11 @@ class Vgg19:
         self.search_pool5 = self.search_pool5
 
         # Cross correlation layers
-        self.corr1 = self.cross_corr_layer(self.rkey_pool1, self.rsearch_pool1, "corr1")
-        self.corr2 = self.cross_corr_layer(self.rkey_pool2, self.rsearch_pool2, "corr2")
-        self.corr3 = self.cross_corr_layer(self.rkey_pool3, self.rsearch_pool3, "corr3")
-        self.corr4 = self.cross_corr_layer(self.rkey_pool4, self.rsearch_pool4, "corr4")
-        self.corr5 = self.cross_corr_layer(self.rkey_pool5, self.rsearch_pool5, "corr5")
+        self.corr1 = self.cross_corr_layer(self.key_pool1, self.search_pool1, "corr1")
+        self.corr2 = self.cross_corr_layer(self.key_pool2, self.search_pool2, "corr2")
+        self.corr3 = self.cross_corr_layer(self.key_pool3, self.search_pool3, "corr3")
+        self.corr4 = self.cross_corr_layer(self.key_pool4, self.search_pool4, "corr4")
+        self.corr5 = self.cross_corr_layer(self.key_pool5, self.search_pool5, "corr5")
 
         # Loss
         # Upsample to original search size
