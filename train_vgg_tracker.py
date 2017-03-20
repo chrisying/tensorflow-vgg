@@ -225,7 +225,7 @@ def main():
 
             # checkpointing
             diagnostic_corr_maps(sess, vgg, 'epoch_%d_corr_maps.png' % (epoch+1), key_image, search_image, ground_truth)
-            vgg.save_npy(sess, './trained_model_epoch_%d_%s.npy' % (epoch+1, str(int(time.time()))))
+            #vgg.save_npy(sess, './trained_model_epoch_%d_%s.npy' % (epoch+1, str(int(time.time()))))
 
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
