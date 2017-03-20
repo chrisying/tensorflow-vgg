@@ -162,7 +162,7 @@ class Vgg19:
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
         #self.raw_loss =  tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.raw_prediction)))
-        self.raw_loss = tf.sigmoid_cross_entropy_with_logits(logits=self.raw_prediction, labels=ground_truth)
+        self.raw_loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=self.raw_prediction, labels=ground_truth)
 
         # TODO: add computation cost
         self.gated_loss = self.weighted_logistic_loss(ground_truth, self.gated_prediction)
