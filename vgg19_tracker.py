@@ -163,8 +163,8 @@ class Vgg19:
 
         #self.raw_loss =  tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.raw_prediction)))
         normalized_ground_truth = (ground_truth + 1.0) / 2.0
-        normalized_ground_truth = normalized_ground_truth / tf.reduce_sum(normalized_ground_truth, axis=[1,2,3])
-        self.raw_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.raw_prediction, labels=normalized_ground_truth)
+        normalized_ground_truth = normalized_ground_truth / tf.reduce_sum(normalized_ground_truth, axis=[1,2,3], keep_dims=True)
+        self.raw_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.raw_prediction, labels=normalized_ground_truth))
 
         # TODO: add computation cost
         self.gated_loss = self.weighted_logistic_loss(ground_truth, self.gated_prediction)
