@@ -154,15 +154,6 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
 
-        cat = TRAIN_CATS[0]
-        cat_dir = os.path.join(PROCESSED_DIR, cat)
-        key_names = os.listdir(cat_dir)
-        cat_loss_sum = 0.0
-        for key_name in key_names:
-            key, search, ground = load_batch(cat, key_names[0])
-            _, loss = sess.run([train_finetune, vgg.raw_loss],
-                    feed_dict={key_image: key, search_image: search, ground_truth: ground})
-
         #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
         #print '[VALID] Initial validation loss: %.5f' % valid_loss
 
@@ -204,8 +195,8 @@ def main():
 
             epoch_loss = epoch_loss_sum / len(TRAIN_CATS)
             print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
-            valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-            print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
+            #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+            #print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
 
             # checkpointing
             diagnostic_corr_maps(sess, vgg, 'epoch_%d_corr_maps.png' % (epoch+1), key_image, search_image, ground_truth)
