@@ -98,7 +98,7 @@ def main():
                 os.makedirs(output_dir)     # Theoretically a race condition
 
             for block_idx in range(num_frames / KEY_FRAME_GAP):
-                print 'Begin processing key frame %s' % block_idx
+                print 'Begin processing key frame %d' % block_idx
                 # Process key frame
                 key_frame_idx = block_idx * KEY_FRAME_GAP + 1
                 key_frame_name = str(key_frame_idx).zfill(8)
@@ -123,17 +123,24 @@ def main():
                     search_frame_idx = key_frame_idx + img_idx + 1
                     if search_frame_idx > num_frames:
                         break
+
                     search_frame_name = str(search_frame_idx).zfill(8)
-                    search_im = Image.open(os.path.join(cat_dir, search_frame_name + '.jpg'))
-                    new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
-                    search_output_name = 'search-%s.png' % (search_frame_name)
-                    new_search_im.save(os.path.join(key_dir, search_output_name))
 
                     sx, sy, sw, sh = convert_to_xywh(ground_truth[search_frame_idx - 1])
                     offset_x = (sx + sw/2) - (x + w/2)
                     offset_y = (sy + sh/2) - (y + h/2)
+
+                    if np.abs(offset_x * scale) > SEARCH_FRAME_SIZE / 2 or np.abs(offset_y * scale) > SEARCH_FRAME_SIZE:
+                        print 'Object leaves frame at search frame %d, (batch size = %d)' % (search_frame_idx, img_idx)
+                        break
+
                     new_gt.write('search-%s: %.3f %.3f\n' %
                             (search_frame_name, offset_x, offset_y))
+
+                    search_im = Image.open(os.path.join(cat_dir, search_frame_name + '.jpg'))
+                    new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
+                    search_output_name = 'search-%s.png' % (search_frame_name)
+                    new_search_im.save(os.path.join(key_dir, search_output_name))
 
                 new_gt.close()
 

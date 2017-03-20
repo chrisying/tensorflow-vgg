@@ -32,15 +32,21 @@ def load_batch(category, key_name):
         assert key_line[:12] == key_name
         x, y, w, h, s = map(float, key_line[14:].split())  # Unused right now
         s_idx = 0
-        search_batch = np.zeros([MAX_FRAME_GAP, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
-        ground_truth = np.full([MAX_FRAME_GAP, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)
+
+        search_lines = f.readlines()
+        batch_size = len(search_lines)
+        if batch_size < MIN_BATCH_SIZE:
+            print 'Skipping %s %s because batch too small' % (category, key_name)
+            return None, None, None
+
+        search_batch = np.zeros([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
+        ground_truth = np.full([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)
         for search_line in f.xreadlines():
             search_name = search_line[:15]
             search_frame = Image.open(os.path.join(data_dir, search_name + '.png'))
             search_batch[s_idx, :, :, :] = np.array(search_frame).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
 
             # Add circle of radium TRUTH_RADIUS of +1 to ground truth using mask
-            # TODO: Gaussian kernel loss instead
             offset_x, offset_y = map(float, search_line[17:].split())
             offset_x_full, offset_y_full = offset_x * s, offset_y * s
             true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
@@ -75,10 +81,13 @@ def run_validation(sess, vgg, k, s, g):
         for key_name in key_names:
             #print 'Running validation on %s' % key_name
             key, search, ground = load_batch(category, key_name)
+            if key is None:
+                continue
+            batch_size = search.shape[0]
             loss = sess.run(vgg.raw_loss, feed_dict={k: key, s: search, g: ground})
             #print '[VALID] Batch loss on %s %s: %.5f' % (category, key_name, loss)
-            test_loss_sum += loss
-            num_samples += 1
+            test_loss_sum += batch_size * loss
+            num_samples += batch_size
     return test_loss_sum / num_samples
 
 
@@ -124,7 +133,8 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
     new_im.save(name)
 
 def diagnostic_corr_maps(sess, vgg, name, k, s, g):
-    debug_key, debug_search, debug_ground = load_batch('basketball', 'key-00000051')
+    debug_key, debug_search, debug_ground = load_batch('basketball', 'key-00000021')
+    assert(debug_key is not None)
     debug_search = debug_search[30:31,:,:,:]
     debug_ground = debug_ground[30:31,:,:,:]
 
@@ -145,7 +155,7 @@ def main():
         # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
         print vgg.get_var_count()
 
-        #train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
+        # TODO: decay LR
         train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
         train_gate = tf.train.AdamOptimizer(1e-5).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
         sess.run(tf.global_variables_initializer())
@@ -169,9 +179,13 @@ def main():
                 cat_dir = os.path.join(PROCESSED_DIR, train_cat)
                 key_names = os.listdir(cat_dir)
                 cat_loss_sum = 0.0
+                num_samples = 0
                 for key_name in key_names:
                     # ordering shouldn't matter
                     key, search, ground = load_batch(train_cat, key_name)
+                    if key is None:
+                        continue
+                    batch_size = search.shape[0]
 
                     # Random frame in middle of training to test on
                     #if train_cat == 'basketball' and key_name == 'key-00000121':
@@ -190,14 +204,15 @@ def main():
                     #    sys.exit()
                     #    print '-----------------'
 
-                    cat_loss_sum += loss
+                    cat_loss_sum += batch_size * loss
+                    num_samples += batch_size
                     #print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
 
-                cat_loss = cat_loss_sum / len(key_names)
+                cat_loss = cat_loss_sum / num_samples
                 epoch_loss_sum += cat_loss
                 print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)
 
-            epoch_loss = epoch_loss_sum / len(TRAIN_CATS)
+            epoch_loss = epoch_loss_sum / len(TRAIN_CATS)   # Treats all categories equally weighted (ignores # samples)
             print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
             #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
             #print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
