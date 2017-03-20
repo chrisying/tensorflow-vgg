@@ -41,7 +41,7 @@ def load_batch(category, key_name):
 
         search_batch = np.zeros([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
         ground_truth = np.full([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)
-        for search_line in f.xreadlines():
+        for search_line in search_lines:
             search_name = search_line[:15]
             search_frame = Image.open(os.path.join(data_dir, search_name + '.png'))
             search_batch[s_idx, :, :, :] = np.array(search_frame).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
