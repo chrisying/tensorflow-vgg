@@ -22,10 +22,6 @@ EPSILON = 1e-5
 #debug_search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
 #debug_ground = np.full([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)   # unused
 
-debug_key, debug_search, debug_ground = load_batch('basketball', 'key-00000121')
-debug_search = debug_search[30:31,:,:,:]
-debug_ground = debug_ground[30:31,:,:,:]
-
 def load_batch(category, key_name):
     data_dir = os.path.join(PROCESSED_DIR, category, key_name)
     key_frame = Image.open(os.path.join(data_dir, key_name + '.png'))
@@ -68,7 +64,6 @@ def load_batch(category, key_name):
             #search_frame.save('test_offset.png')
 
     return key_data, search_batch, ground_truth
-
 
 def run_validation(sess, vgg, k, s, g):
     test_loss_sum = 0.0
@@ -129,6 +124,10 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
     new_im.save(name)
 
 def diagnostic_corr_maps(sess, vgg, name, k, s, g):
+    debug_key, debug_search, debug_ground = load_batch('basketball', 'key-00000051')
+    debug_search = debug_search[30:31,:,:,:]
+    debug_ground = debug_ground[30:31,:,:,:]
+
     visualize_corr_maps(sess, vgg, name, k, s, g, debug_key, debug_search, debug_ground)
 
 
