@@ -161,8 +161,9 @@ class Vgg19:
                                   self.conf5 * self.rcorr5) /
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
-        self.raw_loss =  tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.raw_prediction)))
-        #self.raw_loss =  tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.rcorr5)))
+        #self.raw_loss =  tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.raw_prediction)))
+        self.raw_loss = tf.sigmoid_cross_entropy_with_logits(logits=self.raw_prediction, labels=ground_truth)
+
         # TODO: add computation cost
         self.gated_loss = self.weighted_logistic_loss(ground_truth, self.gated_prediction)
 
@@ -241,7 +242,7 @@ class Vgg19:
             return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
 
     def weighted_logistic_loss(self, ground_truth, prediction):
-        lambd = 10.0    # How much more to weight the positive examples
+        lambd = 1.0    # How much more to weight the positive examples
         scale = lambd * (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
         weight = tf.where(ground_truth > 0, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
         loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * prediction)) * weight)
