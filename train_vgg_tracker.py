@@ -18,9 +18,13 @@ from CONSTANTS import *
 EPSILON = 1e-5
 
 # Debugging inputs
-debug_key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'key-00000091.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
-debug_search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
-debug_ground = np.full([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)   # unused
+#debug_key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'key-00000091.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
+#debug_search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
+#debug_ground = np.full([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)   # unused
+
+debug_key, debug_search, debug_ground = load_batch('basketball', 'key-00000121')
+debug_search = debug_search[30:31,:,:,:]
+debug_ground = debug_ground[30:31,:,:,:]
 
 def load_batch(category, key_name):
     data_dir = os.path.join(PROCESSED_DIR, category, key_name)
@@ -171,9 +175,10 @@ def main():
                     key, search, ground = load_batch(train_cat, key_name)
 
                     # Random frame in middle of training to test on
-                    if train_cat == 'basketball' and key_name == 'key-00000121':
-                        visualize_corr_maps(sess, vgg, 'basketball-00000121.png', key_image, search_image, ground_truth,
-                                            key[:,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
+                    #if train_cat == 'basketball' and key_name == 'key-00000121':
+                    #    visualize_corr_maps(sess, vgg, 'basketball-00000121.png', key_image, search_image, ground_truth,
+                    #                        key[:,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
+
                     _, loss = sess.run([train_finetune, vgg.raw_loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
 
