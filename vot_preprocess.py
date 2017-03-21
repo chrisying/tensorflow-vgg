@@ -10,14 +10,14 @@ Preprocess images in VOT2016 by:
 
 New ground truth format:
     key-00000001: [top-left x] [top-left y] [width] [height] [scale]
-    search-00000002: [x offset] [y offset]
+    search-00000002: [x offset] [y offset] [width] [height]
     ...
-    search-[MAX_FRAME_GAP+1]: [x offset] [y offset]
+    search-[MAX_FRAME_GAP+1]: [x offset] [y offset] [width] [height]
     key-00000002: [top-left x] [top-left y] [width] [height] [scale]
     ...
 
 original image size * scale = key/search image size
-x/y offsets are in original image dimensions
+x/y offsets and width/height are in original image scale (multiply by scale to get scaled offset)
 '''
 
 import math
@@ -134,8 +134,8 @@ def main():
                         print 'Object leaves frame at search frame %d, (batch size = %d)' % (search_frame_idx, img_idx)
                         break
 
-                    new_gt.write('search-%s: %.3f %.3f\n' %
-                            (search_frame_name, offset_x, offset_y))
+                    new_gt.write('search-%s: %.3f %.3f %.3f %.3f\n' %
+                            (search_frame_name, offset_x, offset_y, sw, sh))
 
                     search_im = Image.open(os.path.join(cat_dir, search_frame_name + '.jpg'))
                     new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
