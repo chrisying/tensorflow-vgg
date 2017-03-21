@@ -125,6 +125,7 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
     new_im = Image.new('RGB', ((SEARCH_FRAME_SIZE+2*PAD) * 7, (SEARCH_FRAME_SIZE+2*PAD)), (128,128,128))
     d = ImageDraw.Draw(new_im)
 
+    print key_img.dtype
     key_img = Image.fromarray(key_img.reshape((KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3)))
     dk = ImageDraw.Draw(key_img)
     dk.rectangle([SEARCH_FRAME_SIZE / 2 + PAD - key_dims[0] / 2,
@@ -138,6 +139,7 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
     #red[:,:,2] = 255
     #combined_search = np.where(ground_img<0, search_img, red).reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
     #new_im.paste(Image.fromarray(combined_search.astype('uint8')), (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
+    print search_img.dtype
     search_img = Image.fromarray(search_img.reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3)))
     ds = ImageDraw.Draw(search_img)
     d.rectangle([SEARCH_FRAME_SIZE+2*PAD + SEARCH_FRAME_SIZE / 2 + PAD + search_truth[0] - search_truth[2] / 2,
