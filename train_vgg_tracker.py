@@ -127,10 +127,10 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
 
     key_img = Image.fromarray(key_img.reshape((KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3)))
     dk = ImageDraw.Draw(key_img)
-    dk.rectangle(SEARCH_FRAME_SIZE / 2 + PAD - key_width / 2,
-                 SEARCH_FRAME_SIZE / 2 + PAD - key_height / 2,
-                 SEARCH_FRAME_SIZE / 2 + PAD + key_width / 2,
-                 SEARCH_FRAME_SIZE / 2 + PAD + key_height / 2,
+    dk.rectangle(SEARCH_FRAME_SIZE / 2 + PAD - key_dims[0] / 2,
+                 SEARCH_FRAME_SIZE / 2 + PAD - key_dims[1] / 2,
+                 SEARCH_FRAME_SIZE / 2 + PAD + key_dims[0] / 2,
+                 SEARCH_FRAME_SIZE / 2 + PAD + key_dims[1] / 2,
                  outline='red')
     new_im.paste(key_img, (KEY_FRAME_SIZE/2+PAD, KEY_FRAME_SIZE/2+PAD))
 
