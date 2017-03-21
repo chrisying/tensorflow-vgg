@@ -162,7 +162,14 @@ def diagnostic_corr_maps(sess, vgg, name, k, s, g):
     debug_search = debug_search[20:21,:,:,:]
     debug_ground = debug_ground[20:21,:,:,:]
 
-    visualize_corr_maps(sess, vgg, name, k, s, g, debug_key, debug_search, debug_ground, key_dims, search_truths[20])
+    visualize_corr_maps(sess, vgg, 'basketball_' + name, k, s, g, debug_key, debug_search, debug_ground, key_dims, search_truths[20])
+
+    debug_key, debug_search, debug_ground, key_dims, search_truths = load_batch('fish3', 'key-00000021', return_dims=True)
+    assert(debug_key is not None)
+    debug_search = debug_search[20:21,:,:,:]
+    debug_ground = debug_ground[20:21,:,:,:]
+
+    visualize_corr_maps(sess, vgg, 'fish3_' + name, k, s, g, debug_key, debug_search, debug_ground, key_dims, search_truths[20])
 
 def main():
 #    with tf.device('/cpu:0'):
@@ -194,10 +201,10 @@ def main():
         print 'Trainable variables (gate):'
         print map(lambda x:x.name, vgg.gate_var_list)
 
-        diagnostic_corr_maps(sess, vgg, 'initial_corr_maps.png', key_image, search_image, ground_truth)
+        diagnostic_corr_maps(sess, vgg, 'initial.png', key_image, search_image, ground_truth)
 
-        #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-        #print '[VALID] Initial validation loss: %.5f' % valid_loss
+        valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+        print '[VALID] Initial validation loss: %.5f' % valid_loss
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
@@ -243,11 +250,11 @@ def main():
 
             epoch_loss = epoch_loss_sum / len(TRAIN_CATS)   # Treats all categories equally weighted (ignores # samples)
             print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
-            #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-            #print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
+            valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+            print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
 
             # checkpointing
-            diagnostic_corr_maps(sess, vgg, 'epoch_%d_corr_maps.png' % (epoch+1), key_image, search_image, ground_truth)
+            diagnostic_corr_maps(sess, vgg, 'epoch_%s.png' % str(epoch+1).zfill(3), key_image, search_image, ground_truth)
             #vgg.save_npy(sess, './trained_model_epoch_%d_%s.npy' % (epoch+1, str(int(time.time()))))
 
         dur = time.time() - start
@@ -256,7 +263,7 @@ def main():
         #diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
 
         # save model
-        #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
 
 if __name__ == '__main__':
     main()
