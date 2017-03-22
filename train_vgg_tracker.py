@@ -242,7 +242,7 @@ def main():
 
                     cat_loss_sum += batch_size * loss
                     num_samples += batch_size
-                    print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
+                    #print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
 
                 cat_loss = cat_loss_sum / num_samples
                 epoch_loss_sum += cat_loss
