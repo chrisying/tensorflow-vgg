@@ -257,7 +257,7 @@ class Vgg19:
         normalized_ground_truth = tf.reshape(normalized_ground_truth, flattened_shape)
 
         scale = tf.constant((SEARCH_FRAME_SIZE ** 2), dtype=tf.float32) / tf.reduce_sum(ground_truth)
-        weight = tf.where(ground_truth > 0.5, tf.ones_like(normalized_ground_truth) * scale, tf.ones_like(normalized_ground_truth))
+        weight = tf.where(normalized_ground_truth > 0, tf.ones_like(normalized_ground_truth) * scale, tf.ones_like(normalized_ground_truth))
         reshaped_prediction = tf.reshape(prediction, flattened_shape)
         weighted_logits = tf.mul(prediction, weight)    # TODO: should we normalized prediction?
 
