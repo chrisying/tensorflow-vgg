@@ -259,7 +259,7 @@ class Vgg19:
         scale = (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
         weight = tf.where(ground_truth > 0, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
 
-        softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=.normalized_prediction, labels=normalized_ground_truth)
+        softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=normalized_prediction, labels=normalized_ground_truth)
         loss = tf.reduce_mean(softmax_loss * weight)
 
         return loss
