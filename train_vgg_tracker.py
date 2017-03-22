@@ -170,7 +170,7 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
     new_im.save(name)
 
 def diagnostic_corr_maps(sess, vgg, name, k, s, g):
-    debug_key, debug_search, debug_ground, key_dims, search_truths = load_batch('basketball', 'key-00000021', return_dims=True)
+    debug_key, debug_search, debug_ground, key_dims, search_truths = load_batch('basketball', 'key-00000031', return_dims=True)
     assert(debug_key is not None)
     debug_search = debug_search[20:21,:,:,:]
     debug_ground = debug_ground[20:21,:,:,:]
@@ -237,22 +237,8 @@ def main():
                         print 'Skipping %s %s because batch too small' % (train_cat, key_name)
                         continue
 
-                    # Random frame in middle of training to test on
-                    #if train_cat == 'basketball' and key_name == 'key-00000121':
-                    #    visualize_corr_maps(sess, vgg, 'basketball-00000121.png', key_image, search_image, ground_truth,
-                    #                        key[:,:,:,:], search[30:31,:,:,:], ground[30:31,:,:,:])
-
                     _, loss = sess.run([train_finetune, vgg.raw_loss],
                             feed_dict={key_image: key, search_image: search, ground_truth: ground})
-
-                    #if not np.isfinite(loss):
-                    #    print '-----WARNING-----'
-                    #    print 'Loss non-finite at %s %s' % (train_cat, key_name)
-                    #    r1, r2, r3, r4, r5, l1, l2, l3, l4, l5 = sess.run([vgg.rcorr1, vgg.loss, vgg.loss1],
-                    #             feed_dict={key_image: key, search_image: search, ground_truth: ground})
-                    #    np.save('nonfinite.npy', {'r1':r1, 'r2':r2, 'r3':r3, 'r4':r4, 'r5':r5, 'l1':l1, 'l2':l2, 'l3':l3, 'l4':l4, 'l5':l5})
-                    #    sys.exit()
-                    #    print '-----------------'
 
                     cat_loss_sum += batch_size * loss
                     num_samples += batch_size
