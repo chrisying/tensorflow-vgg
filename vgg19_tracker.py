@@ -254,7 +254,7 @@ class Vgg19:
         flattened_shape = [-1, shape[1] * shape[2] * shape[3]]
 
         normalized_ground_truth = ground_truth / tf.reduce_sum(prediction, axis=[1,2,3], keep_dims=True)
-        normalized_ground_truth = tf.reshape(normalized_grouth_truth, flattened_shape)
+        normalized_ground_truth = tf.reshape(normalized_ground_truth, flattened_shape)
 
         scale = tf.constant((SEARCH_FRAME_SIZE ** 2), dtype=tf.float32) / tf.reduce_sum(ground_truth)
         weight = tf.where(ground_truth > 0.5, tf.ones_like(normalized_ground_truth) * scale, tf.ones_like(normalized_ground_truth))
