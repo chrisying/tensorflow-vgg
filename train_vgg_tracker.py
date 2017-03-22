@@ -37,6 +37,12 @@ def load_batch(category, key_name, return_dims=False):
 
         search_lines = f.readlines()
         batch_size = len(search_lines)
+        if batch_size == 0:
+            print '-----WARNING----'
+            print 'BATCH_SIZE == 0 for %s %s' % (category, key_name)
+            print '----------------'
+
+        '''
         if batch_size < MIN_BATCH_SIZE:
             print 'Skipping %s %s because batch too small' % (category, key_name)
 
@@ -44,6 +50,7 @@ def load_batch(category, key_name, return_dims=False):
                 return None, None, None, None, None
 
             return None, None, None
+        '''
 
         search_batch = np.zeros([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3], dtype=np.uint8)
         ground_truth = np.full([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1, dtype=np.uint8)
@@ -91,13 +98,18 @@ def run_validation(sess, vgg, k, s, g):
         for key_name in key_names:
             #print 'Running validation on %s' % key_name
             key, search, ground = load_batch(category, key_name)
-            if key is None:
-                continue
             batch_size = search.shape[0]
+            if batch_size == 0:
+                continue
+            #if batch_size < MIN_BATCH_SIZE:
+            #    print 'Skipping %s %s due to small batch size' % (category, key_name)
+            #    continue
             loss = sess.run(vgg.raw_loss, feed_dict={k: key, s: search, g: ground})
             #print '[VALID] Batch loss on %s %s: %.5f' % (category, key_name, loss)
             test_loss_sum += batch_size * loss
             num_samples += batch_size
+
+    assert(num_samples > 0)
     return test_loss_sum / num_samples
 
 def convert_corr_map(corr_map):
@@ -203,8 +215,8 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial.png', key_image, search_image, ground_truth)
 
-        valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-        print '[VALID] Initial validation loss: %.5f' % valid_loss
+        #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+        #print '[VALID] Initial validation loss: %.5f' % valid_loss
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
@@ -219,9 +231,10 @@ def main():
                 for key_name in key_names:
                     # ordering shouldn't matter
                     key, search, ground = load_batch(train_cat, key_name)
-                    if key is None:
-                        continue
                     batch_size = search.shape[0]
+                    if batch_size < MIN_BATCH_SIZE:
+                        print 'Skipping %s %s because batch too small' % (train_cat, key_name)
+                        continue
 
                     # Random frame in middle of training to test on
                     #if train_cat == 'basketball' and key_name == 'key-00000121':
@@ -242,7 +255,7 @@ def main():
 
                     cat_loss_sum += batch_size * loss
                     num_samples += batch_size
-                    #print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
+                    print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
 
                 cat_loss = cat_loss_sum / num_samples
                 epoch_loss_sum += cat_loss
@@ -250,8 +263,8 @@ def main():
 
             epoch_loss = epoch_loss_sum / len(TRAIN_CATS)   # Treats all categories equally weighted (ignores # samples)
             print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
-            valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-            print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
+            #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+            #print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
 
             # checkpointing
             diagnostic_corr_maps(sess, vgg, 'epoch_%s.png' % str(epoch+1).zfill(3), key_image, search_image, ground_truth)
@@ -263,7 +276,7 @@ def main():
         #diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
 
         # save model
-        vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
 
 if __name__ == '__main__':
     main()
