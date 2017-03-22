@@ -216,8 +216,8 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial.png', key_image, search_image, ground_truth)
 
-        #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-        #print '[VALID] Initial validation loss: %.5f' % valid_loss
+        valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+        print '[VALID] Initial validation loss: %.5f' % valid_loss
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
@@ -250,8 +250,8 @@ def main():
 
             epoch_loss = epoch_loss_sum / len(TRAIN_CATS)   # Treats all categories equally weighted (ignores # samples)
             print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
-            #valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-            #print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
+            valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
+            print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
 
             # checkpointing
             diagnostic_corr_maps(sess, vgg, 'epoch_%s.png' % str(epoch+1).zfill(3), key_image, search_image, ground_truth)
@@ -263,7 +263,7 @@ def main():
         #diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
 
         # save model
-        #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
 
 if __name__ == '__main__':
     main()

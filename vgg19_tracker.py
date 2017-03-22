@@ -239,16 +239,6 @@ class Vgg19:
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
             return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
 
-    '''
-    def weighted_logistic_loss(self, ground_truth, prediction):
-        lambd = 1.0    # How much more to weight the positive examples
-        scale = lambd * (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
-        weight = tf.where(ground_truth > 0, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
-        loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * prediction)) * weight)
-
-        return loss
-    '''
-
     def weighted_softmax_loss(self, ground_truth, prediction):
         shape = ground_truth.get_shape().as_list()  # [None, 256, 256, 1]
         flattened_shape = [-1, shape[1] * shape[2] * shape[3]]
