@@ -259,7 +259,7 @@ class Vgg19:
         scale = tf.constant((SEARCH_FRAME_SIZE ** 2), dtype=tf.float32) / tf.reduce_sum(ground_truth)
         weight = tf.where(normalized_ground_truth > 0, tf.ones_like(normalized_ground_truth) * scale, tf.ones_like(normalized_ground_truth))
         reshaped_prediction = tf.reshape(prediction, flattened_shape)
-        weighted_logits = tf.mul(prediction, weight)    # TODO: should we normalized prediction?
+        weighted_logits = prediction * weight    # TODO: should we normalized prediction?
 
         softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=weighted_logits, labels=normalized_ground_truth)
         loss = tf.reduce_mean(softmax_loss)
