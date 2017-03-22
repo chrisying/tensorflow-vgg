@@ -53,7 +53,8 @@ def load_batch(category, key_name, return_dims=False):
         '''
 
         search_batch = np.zeros([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3], dtype=np.uint8)
-        ground_truth = np.full([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1, dtype=np.uint8)
+        #ground_truth = np.full([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1, dtype=np.uint8)
+        ground_truth = np.zeros([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], dtype=np.uint8)
 
         search_truths = np.zeros([batch_size, 4])
 

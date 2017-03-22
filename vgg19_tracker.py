@@ -250,17 +250,16 @@ class Vgg19:
     '''
 
     def weighted_softmax_loss(self, ground_truth, prediction):
-        normalized_ground_truth = (ground_truth + 1.0) / 2.0
-        normalized_ground_truth /= tf.reduce_sum(normalized_ground_truth, axis=[1,2,3], keep_dims=True)
+        shape = ground_truth.get_shape().as_list()  # [None, 256, 256, 1]
+        normalized_ground_truth /= tf.reduce_sum(prediction, axis=[1,2,3], keep_dims=True)
+        normalized_ground_truth = tf.reshape(normalized_grouth_truth, [-1, shape[1] * shape[2] * shape[3]])
 
-        normalized_prediction = prediction - tf.reduce_min(prediction, axis=[1,2,3], keep_dims=True)
-        normalized_prediction /= tf.reduce_sum(normalized_prediction, axis=[1,2,3], keep_dims=True)
+        scale = tf.constant((SEARCH_FRAME_SIZE ** 2), dtype=tf.float32) / tf.reduce_sum(ground_truth)
+        weight = tf.where(ground_truth > 0.5, tf.ones_like(normalized_ground_truth) * scale, tf.ones_like(normalized_ground_truth))
+        weighted_logits = tf.mul(prediction, weight)    # TODO: should we normalized prediction?
 
-        scale = (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
-        weight = tf.where(ground_truth > 0, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
-
-        softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=normalized_prediction, labels=normalized_ground_truth)
-        loss = tf.reduce_mean(softmax_loss * weight)
+        softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=weighted_logits, labels=normalized_ground_truth)
+        loss = tf.reduce_mean(softmax_loss)
 
         return loss
 
