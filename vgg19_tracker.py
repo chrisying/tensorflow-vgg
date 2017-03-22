@@ -161,13 +161,9 @@ class Vgg19:
                                   self.conf5 * self.rcorr5) /
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
-        #self.raw_loss =  tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * self.raw_prediction)))
-        normalized_ground_truth = (ground_truth + 1.0) / 2.0
-        normalized_ground_truth = normalized_ground_truth / tf.reduce_sum(normalized_ground_truth, axis=[1,2,3], keep_dims=True)
-        self.raw_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.raw_prediction, labels=normalized_ground_truth))
-
+        self.raw_loss = self.weighted_softmax_loss(ground_truth, raw_prediction)
         # TODO: add computation cost
-        self.gated_loss = self.weighted_logistic_loss(ground_truth, self.gated_prediction)
+        self.gated_loss = self.weighted_softmax_loss(ground_truth, self.gated_prediction)
 
         self.data_dict = None
 
@@ -243,11 +239,28 @@ class Vgg19:
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
             return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
 
+    '''
     def weighted_logistic_loss(self, ground_truth, prediction):
         lambd = 1.0    # How much more to weight the positive examples
         scale = lambd * (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
         weight = tf.where(ground_truth > 0, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
         loss = tf.reduce_mean(tf.log(1.0 + tf.exp(-ground_truth * prediction)) * weight)
+
+        return loss
+    '''
+
+    def weighted_softmax_loss(self, ground_truth, prediction):
+        normalized_ground_truth = (ground_truth + 1.0) / 2.0
+        normalized_ground_truth /= tf.reduce_sum(normalized_ground_truth, axis=[1,2,3], keep_dims=True)
+
+        normalized_prediction = prediction - tf.reduce_min(prediction, axis=[1,2,3], keep_dims=True)
+        normalized_prediction /= tf.reduce_sum(normalized_prediction, axis=[1,2,3], keep_dims=True)
+
+        scale = (SEARCH_FRAME_SIZE ** 2) / (np.pi * TRUTH_RADIUS ** 2)
+        weight = tf.where(ground_truth > 0, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
+
+        softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.normalized_prediction, labels=normalized_ground_truth)
+        loss = tf.reduce_mean(softmax_loss * weight)
 
         return loss
 
