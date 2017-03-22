@@ -161,7 +161,7 @@ class Vgg19:
                                   self.conf5 * self.rcorr5) /
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
-        self.raw_loss = self.weighted_softmax_loss(ground_truth, raw_prediction)
+        self.raw_loss = self.weighted_softmax_loss(ground_truth, self.raw_prediction)
         # TODO: add computation cost
         self.gated_loss = self.weighted_softmax_loss(ground_truth, self.gated_prediction)
 
