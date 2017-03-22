@@ -176,12 +176,12 @@ def diagnostic_corr_maps(sess, vgg, name, k, s, g):
 
     visualize_corr_maps(sess, vgg, 'basketball_' + name, k, s, g, debug_key, debug_search, debug_ground, key_dims, search_truths[20])
 
-    debug_key, debug_search, debug_ground, key_dims, search_truths = load_batch('fish3', 'key-00000021', return_dims=True)
-    assert(debug_key is not None)
-    debug_search = debug_search[20:21,:,:,:]
-    debug_ground = debug_ground[20:21,:,:,:]
+    #debug_key, debug_search, debug_ground, key_dims, search_truths = load_batch('fish3', 'key-00000021', return_dims=True)
+    #assert(debug_key is not None)
+    #debug_search = debug_search[20:21,:,:,:]
+    #debug_ground = debug_ground[20:21,:,:,:]
 
-    visualize_corr_maps(sess, vgg, 'fish3_' + name, k, s, g, debug_key, debug_search, debug_ground, key_dims, search_truths[20])
+    #visualize_corr_maps(sess, vgg, 'fish3_' + name, k, s, g, debug_key, debug_search, debug_ground, key_dims, search_truths[20])
 
 def main():
 #    with tf.device('/cpu:0'):
