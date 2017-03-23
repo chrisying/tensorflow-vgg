@@ -314,6 +314,8 @@ class Vgg19:
         boxB_area = (boxB_x2 - boxB_x1) * (boxB_y2 - boxB_y1)
 
         iou = inter_area / (boxA_area + boxB_area - inter_area)
+        print 'iou shape'
+        print iou.get_shape().as_list()
 
         return iou
 
