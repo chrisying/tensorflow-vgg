@@ -289,12 +289,17 @@ class Vgg19:
 
         print 'offset shape'
         print offset.get_shape().as_list()
+        print 'offset_x shape'
+        print offset_x.get_shape().as_list()
 
         # top left + bottom right coords for prediction
         boxA_x1 = offset_x - key_bb[0] / 2
         boxA_y1 = offset_y - key_bb[1] / 2
         boxA_x2 = offset_x + key_bb[0] / 2
         boxA_y2 = offset_y + key_bb[1] / 2
+
+        print 'boxA_x1 shape'
+        print boxA_x1.get_shape().as_list()
 
         # top left + bottom right coords for ground truth
         boxB_x1 = search_bb[0] - search_bb[2] / 2
@@ -308,8 +313,6 @@ class Vgg19:
         inter_x2 = tf.minimum(boxA_x2, boxB_x2)
         inter_y2 = tf.minimum(boxA_y2, boxB_y2)
 
-        print 'inter_x1 shape'
-        print inter_x1.get_shape().as_list()
 
         inter_area = tf.where(
                 tf.logical_and(inter_x1 < inter_x2, inter_y1 < inter_y2),    # true iff intersecting boxes

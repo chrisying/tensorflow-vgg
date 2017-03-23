@@ -107,10 +107,10 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_dims, search_t
             [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
              vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5],
             feed_dict={
-                self.key_img: key_img,
-                self.search_img: search_img,
-                self.key_bb: key_dims,
-                self.search_bb: search_truth})
+                vgg.key_img: key_img,
+                vgg.search_img: search_img,
+                vgg.key_bb: key_dims,
+                vgg.search_bb: search_truth})
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
