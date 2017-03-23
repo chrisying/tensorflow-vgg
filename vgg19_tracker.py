@@ -25,15 +25,21 @@ class Vgg19:
         self.cnn_var_list = []
         self.gate_var_list = []
 
-    def build(self, key_img, search_img, ground_truth):
+    def build(self):
         """
         load variable from npy to build the VGG
 
-        :param key_img: RGB [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3]
-        :param search_img: RGB [batch, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3]
+        key_img: RGB [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3]
+        search_img: RGB [batch, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3]
+        key_bb: [2] (width, height) after scale conversion
+        search_bb: [batch, 4] (x, y, w, h) after scale conversion
         """
 
-        #TODO: assert values are [0, 255]
+        # Inputs
+        self.key_img = tf.placeholder(tf.float32, [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
+        self.search_img = tf.placeholder(tf.float32, [None, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
+        self.key_bb = tf.placeholder(tf.float32, [2])
+        self.search_bb = tf.placeholder(tf.float32, [None, 4])
 
         # Convert RGB to BGR
         key_red, key_green, key_blue = tf.split(axis=3, num_or_size_splits=3, value=key_img)
@@ -145,11 +151,11 @@ class Vgg19:
         self.gate5 = self.extract_corr_features(self.corr5, SEARCH_FRAME_SIZE / 2 ** 4)
 
         # Confidence of gates
-        self.conf1 = self.confidence_layer(self.gate1, 'conf1')
-        self.conf2 = self.confidence_layer(self.gate2, 'conf2')
-        self.conf3 = self.confidence_layer(self.gate3, 'conf3')
-        self.conf4 = self.confidence_layer(self.gate4, 'conf4')
-        self.conf5 = self.confidence_layer(self.gate5, 'conf5')
+        #self.conf1 = self.confidence_layer(self.gate1, 'conf1')
+        #self.conf2 = self.confidence_layer(self.gate2, 'conf2')
+        #self.conf3 = self.confidence_layer(self.gate3, 'conf3')
+        #self.conf4 = self.confidence_layer(self.gate4, 'conf4')
+        #self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
         # Prediction and loss
         self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
@@ -161,9 +167,15 @@ class Vgg19:
                                   self.conf5 * self.rcorr5) /
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
-        self.raw_loss = self.weighted_softmax_loss(ground_truth, self.raw_prediction)
+        self.ground_truth = self.generate_ground_gaussian(self.search_bb)
+        self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
+        self.IOU = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
+        self.IOU_at_1 = self.IOU[0, :]
+        self.IOU_at_5 = tf.reduce_mean(self.IOU[:5, :])
+        self.IOU_full = tf.reduce_mean(self.IOU)
+
         # TODO: add computation cost
-        self.gated_loss = self.weighted_softmax_loss(ground_truth, self.gated_prediction)
+        #self.gated_loss = self.weighted_softmax_loss(ground_truth, self.gated_prediction)
 
         self.data_dict = None
 
@@ -239,12 +251,24 @@ class Vgg19:
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
             return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
 
+    def generate_ground_gaussian(self, bbs):
+        def bb_to_gaussian(bb):
+            x = tf.range(-SEARCH_FRAME_SIZE / 2, limit=SEARCH_FRAME_SIZE / 2, dtype=tf.float32)
+            xs, ys = tf.meshgrid(x, x)
+            gaus = GAUSSIAN_AMP * tf.exp(-((xs - bb[0])**2 / (2 * GAUSSIAN_VAR) + (ys - bb[1])**2 / (2 * GAUSSIAN_VAR)))
+            return gaus     # [SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE]
+
+        grounds = tf.map_fn(bb_to_gaussian, elems=bbs, dtype=tf.float32, back_prop=False)
+        return tf.reshape(grounds, [-1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1])
+
     def weighted_softmax_loss(self, ground_truth, prediction):
         shape = ground_truth.get_shape().as_list()  # [None, 256, 256, 1]
         flattened_shape = [-1, shape[1] * shape[2] * shape[3]]
 
-        normalized_ground_truth = ground_truth / tf.reduce_sum(prediction, axis=[1,2,3], keep_dims=True)
-        normalized_ground_truth = tf.reshape(normalized_ground_truth, flattened_shape)
+        # uncomment if ground_truth is not a prob distribution
+        #normalized_ground_truth = ground_truth / tf.reduce_sum(ground_truth, axis=[1,2,3], keep_dims=True)
+        #normalized_ground_truth = tf.reshape(normalized_ground_truth, flattened_shape)
+        normalized_ground_truth = tf.reshape(ground_truth, flattened_shape)
 
         scale = tf.constant((SEARCH_FRAME_SIZE ** 2), dtype=tf.float32) / tf.reduce_sum(ground_truth)
         weight = tf.where(normalized_ground_truth > 0, tf.ones_like(normalized_ground_truth) * scale, tf.ones_like(normalized_ground_truth))
@@ -255,6 +279,44 @@ class Vgg19:
         loss = tf.reduce_mean(softmax_loss)
 
         return loss
+
+    def IOU(self, prediction, key_bb, search_bb):
+        shape = prediction.get_shape().as_list()    # [batch, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1]
+        assert(shape[3] == 1)
+        offset = tf.argmax(tf.reshape(prediction, [shape[0], shape[1] * shape[2]]), axis=1)
+        offset_x = offset % SEARCH_FRAME_SIZE
+        offset_y = tf.floordiv(offset, SEARCH_FRAME_SIZE)
+
+        # top left + bottom right coords for prediction
+        boxA_x1 = offset_x - key_bb[0] / 2
+        boxA_y1 = offset_y - key_bb[1] / 2
+        boxA_x2 = offset_x + key_bb[0] / 2
+        boxA_y2 = offset_y + key_bb[1] / 2
+
+        # top left + bottom right coords for ground truth
+        boxB_x1 = search_bb[0] - search_bb[2] / 2
+        boxB_y1 = search_bb[1] - search_bb[3] / 2
+        boxB_x2 = search_bb[0] + search_bb[2] / 2
+        boxB_y2 = search_bb[1] + search_bb[3] / 2
+
+        # interior bb
+        inter_x1 = tf.maximum(boxA_x1, boxB_x1)
+        inter_y1 = tf.maximum(boxA_y1, boxB_y1)
+        inter_x2 = tf.minimum(boxA_x2, boxB_x2)
+        inter_y2 = tf.minimum(boxA_y2, boxB_y2)
+
+        inter_area = tf.where(
+                inter_x1 < inter_x2 and inter_y1 < inter_y2,    # true iff intersecting boxes
+                (inter_x2 - inter_x1) * (inter_y2 - inter_y1),
+                tf.zeros_like(inter_x1))    # non-intersecting boxes
+
+        boxA_area = (boxA_x2 - boxA_x1) * (boxA_y2 - boxA_y1)
+        boxB_area = (boxB_x2 - boxB_x1) * (boxB_y2 - boxB_y1)
+
+        iou = inter_area / (boxA_area + boxB_area - inter_area)
+
+        return iou
+
 
     def non_max_suppression(self, input, window_size):
         # input = B x W x H x C

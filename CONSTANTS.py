@@ -12,8 +12,9 @@ KEY_FRAME_GAP = 10
 MAX_FRAME_GAP = 50
 KEY_FRAME_SIZE = 128
 SEARCH_FRAME_SIZE = 256
-TRUTH_RADIUS = 5
-MIN_BATCH_SIZE = 20
+BATCH_SIZE = 20
+GAUSSIAN_AMP = 1
+GAUSSIAN_VAR = 1
 
 TRAIN_EPOCHS = 1
 TRAIN_CATS = ['bag',
@@ -62,17 +63,18 @@ TRAIN_CATS = ['bag',
               'traffic',
               'tunnel',
               'wiper']
+
 TEST_CATS = ['ball2',
              'birds2',
-             #'bolt2',
+             'bolt2',
              'car2',
              'fish3',
-             #'fish4',
-             #'gymnastics3',
-             #'gymnastics4',
+             'fish4',
+             'gymnastics3',
+             'gymnastics4',
              'handball2',
              'iceskater2',
-             #'motocross2',
+             'motocross2',
              'pedestrian2',
-             #'singer3',
+             'singer3',
              'soccer2']

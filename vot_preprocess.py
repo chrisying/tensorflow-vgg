@@ -66,7 +66,7 @@ def extract_search_frame(im, x, y, w, h, scale):
     im_w, im_h = im.size
 
     search_size = SEARCH_FRAME_SIZE / scale
-    new_x = x + w/2 - search_size / 2
+    new_x = x + w/2 - search_size / 2   # top left
     new_y = y + h/2 - search_size / 2
 
     if new_x >= 0 and new_y >= 0 and new_x + search_size < im_w and new_y + search_size < im_h:

@@ -17,12 +17,7 @@ from CONSTANTS import *
 # For resolving some floating point precision errors
 EPSILON = 1e-5
 
-# Debugging inputs
-#debug_key = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'key-00000091.png'))).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
-#debug_search = np.array(Image.open(os.path.join(PROCESSED_DIR, 'fish1', 'key-00000091', 'search-00000107.png'))).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
-#debug_ground = np.full([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1)   # unused
-
-def load_batch(category, key_name, return_dims=False):
+def load_batch(category, key_name):
     # If return_dims == True, returns 2 additional values, corresponding to
     #       (key_width, key_height) [B x 4 array of (offset_x, offset_y, s_width, s_height)]
     # used for visualization only, dimensions are in SCALED image scale
@@ -36,35 +31,21 @@ def load_batch(category, key_name, return_dims=False):
         x, y, w, h, s = map(float, key_line[14:].split())
 
         search_lines = f.readlines()
-        batch_size = len(search_lines)
-        if batch_size == 0:
-            print '-----WARNING----'
-            print 'BATCH_SIZE == 0 for %s %s' % (category, key_name)
-            print '----------------'
+        num_frames = len(search_lines)
 
-        '''
-        if batch_size < MIN_BATCH_SIZE:
+        if num_frames < BATCH_SIZE:
             print 'Skipping %s %s because batch too small' % (category, key_name)
+            return None, None, None, None, None
 
-            if return_dims:
-                return None, None, None, None, None
+        search_batch = np.zeros([BATCH_SIZE, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3], dtype=np.uint8)
+        search_truths = np.zeros([BATCH_SIZE, 4])
 
-            return None, None, None
-        '''
-
-        search_batch = np.zeros([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3], dtype=np.uint8)
-        #ground_truth = np.full([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], -1, dtype=np.uint8)
-        ground_truth = np.zeros([batch_size, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1], dtype=np.uint8)
-
-        search_truths = np.zeros([batch_size, 4])
-
-        s_idx = 0
-        for search_line in search_lines:
+        for s_idx in range(BATCH_SIZE):
+            search_line = search_lines[s_idx]
             search_name = search_line[:15]
             search_frame = Image.open(os.path.join(data_dir, search_name + '.png'))
             search_batch[s_idx, :, :, :] = np.array(search_frame).reshape([1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
 
-            # Add circle of radium TRUTH_RADIUS of +1 to ground truth using mask
             offset_x, offset_y, s_width, s_height = map(float, search_line[17:].split())
 
             search_truths[s_idx, 0] = offset_x * s
@@ -72,25 +53,20 @@ def load_batch(category, key_name, return_dims=False):
             search_truths[s_idx, 2] = s_width * s
             search_truths[s_idx, 3] = s_height * s
 
-            offset_x_full, offset_y_full = offset_x * s, offset_y * s
-            true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
-            og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y-EPSILON, -true_center_x:SEARCH_FRAME_SIZE-true_center_x-EPSILON]
-            mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
-            ground_truth[s_idx, :, :, :][mask] = 1
+            # Add circle of radium TRUTH_RADIUS of +1 to ground truth using mask
+            #offset_x_full, offset_y_full = offset_x * s, offset_y * s
+            #true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
+            #og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y-EPSILON, -true_center_x:SEARCH_FRAME_SIZE-true_center_x-EPSILON]
+            #mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
+            #ground_truth[s_idx, :, :, :][mask] = 1
 
-            s_idx += 1
+    return key_data, search_batch, np.array([w*s, h*s]), search_truths
 
-            #dr = ImageDraw.Draw(search_frame)
-            #dr.rectangle((true_center_x - 10, true_center_y - 10, true_center_x + 10, true_center_y + 10), outline='red')
-            #search_frame.save('test_offset.png')
-
-    if return_dims:
-        return key_data, search_batch, ground_truth, (w*s, h*s), search_truths
-
-    return key_data, search_batch, ground_truth
-
-def run_validation(sess, vgg, k, s, g):
+def run_validation(sess, vgg):
     test_loss_sum = 0.0
+    iou1_sum = 0.0
+    iou5_sum = 0.0
+    iou20_sum = 0.0
     num_samples = 0
     for category in TEST_CATS:
         #print 'Running validation on %s' % category
@@ -98,20 +74,24 @@ def run_validation(sess, vgg, k, s, g):
         key_names = os.listdir(data_dir)
         for key_name in key_names:
             #print 'Running validation on %s' % key_name
-            key, search, ground = load_batch(category, key_name)
-            batch_size = search.shape[0]
-            if batch_size == 0:
+            key, search, key_bb, search_bb = load_batch(category, key_name)
+            if key is None:
                 continue
-            #if batch_size < MIN_BATCH_SIZE:
-            #    print 'Skipping %s %s due to small batch size' % (category, key_name)
-            #    continue
-            loss = sess.run(vgg.raw_loss, feed_dict={k: key, s: search, g: ground})
+
+            loss, iou1 iou5, iou20 = sess.run(vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_at_20,
+                    feed_dict={vgg.key_img: key,
+                               vgg.search_img: search,
+                               vgg.key_bb: key_bb,
+                               vgg.search_bb: search_bb})
             #print '[VALID] Batch loss on %s %s: %.5f' % (category, key_name, loss)
-            test_loss_sum += batch_size * loss
-            num_samples += batch_size
+            test_loss_sum += BATCH_SIZE * loss
+            iou1_sum += iou1
+            iou5_sum += iou5
+            iou20_sum += iou20
+            num_samples += BATCH_SIZE
 
     assert(num_samples > 0)
-    return test_loss_sum / num_samples
+    return test_loss_sum / num_samples, iou1_sum / num_samples, iou5_sum / num_samples, iou20_sum / num_samples
 
 def convert_corr_map(corr_map):
     corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
@@ -121,12 +101,16 @@ def convert_corr_map(corr_map):
     #im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
     return im
 
-def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_img, key_dims, search_truth):
+def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_dims, search_truth):
     # Expects key_img, search_img, ground_img to be batch size 1
     [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
             [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
              vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5],
-            feed_dict={k: key_img, s: search_img, g: ground_img})
+            feed_dict={
+                self.key_img: key_img,
+                self.search_img: search_img,
+                self.key_bb: key_dims,
+                self.search_bb: search_truth})
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
@@ -169,44 +153,32 @@ def visualize_corr_maps(sess, vgg, name, k, s, g, key_img, search_img, ground_im
 
     new_im.save(name)
 
-def diagnostic_corr_maps(sess, vgg, name, k, s, g):
-    debug_key, debug_search, debug_ground, key_dims, search_truths = load_batch('basketball', 'key-00000031', return_dims=True)
+def diagnostic_corr_maps(sess, vgg, name):
+    debug_key, debug_search, debug_key_bb, debug_search_bb = load_batch('basketball', 'key-00000031')
     assert(debug_key is not None)
     debug_search = debug_search[20:21,:,:,:]
-    debug_ground = debug_ground[20:21,:,:,:]
+    debug_search_bb = debug_search[20:21,:]
 
-    visualize_corr_maps(sess, vgg, 'basketball_' + name, k, s, g, debug_key, debug_search, debug_ground, key_dims, search_truths[20])
-
-    #debug_key, debug_search, debug_ground, key_dims, search_truths = load_batch('fish3', 'key-00000021', return_dims=True)
-    #assert(debug_key is not None)
-    #debug_search = debug_search[20:21,:,:,:]
-    #debug_ground = debug_ground[20:21,:,:,:]
-
-    #visualize_corr_maps(sess, vgg, 'fish3_' + name, k, s, g, debug_key, debug_search, debug_ground, key_dims, search_truths[20])
+    visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb[20])
 
 def main():
 #    with tf.device('/cpu:0'):
         sess = tf.Session()
 
-        key_image = tf.placeholder(tf.float32, [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
-        search_image = tf.placeholder(tf.float32, [None, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3])
-        ground_truth = tf.placeholder(tf.float32, [None, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1])
-
         vgg = vgg19.Vgg19('./vgg19.npy')
-        vgg.build(key_image, search_image, ground_truth)
+        vgg.build()
 
         # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
         print vgg.get_var_count()
 
         global_step = tf.Variable(0, trainable=False)
         starter_learning_rate = 1e-5
-        decay_steps = 10000
+        decay_steps = 1000
         decay_rate = 0.95
 
         learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, decay_steps, decay_rate, staircase=True)
         train_finetune = tf.train.AdamOptimizer(learning_rate).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
-        #train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
-        train_gate = tf.train.AdamOptimizer(1e-5).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
+        #train_gate = tf.train.AdamOptimizer(1e-5).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
         sess.run(tf.global_variables_initializer())
 
         print 'Trainable variables (finetune):'
@@ -214,47 +186,43 @@ def main():
         print 'Trainable variables (gate):'
         print map(lambda x:x.name, vgg.gate_var_list)
 
-        diagnostic_corr_maps(sess, vgg, 'initial.png', key_image, search_image, ground_truth)
+        diagnostic_corr_maps(sess, vgg, 'initial.png')
 
-        valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-        print '[VALID] Initial validation loss: %.5f' % valid_loss
+        valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
+        print '[VALID] Initial validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@20: %.5f' % (valid_loss, iou1, iou5, iou20)
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
         start = time.time()
         for epoch in range(TRAIN_EPOCHS):
             epoch_loss_sum = 0.0
+            num_samples = 0
             for train_cat in TRAIN_CATS:
                 cat_dir = os.path.join(PROCESSED_DIR, train_cat)
                 key_names = os.listdir(cat_dir)
-                cat_loss_sum = 0.0
-                num_samples = 0
                 for key_name in key_names:
                     # ordering shouldn't matter
-                    key, search, ground = load_batch(train_cat, key_name)
-                    batch_size = search.shape[0]
-                    if batch_size < MIN_BATCH_SIZE:
-                        print 'Skipping %s %s because batch too small' % (train_cat, key_name)
+                    key, search, key_bb, search_bb = load_batch(train_cat, key_name)
+                    if key is None:
                         continue
 
                     _, loss = sess.run([train_finetune, vgg.raw_loss],
-                            feed_dict={key_image: key, search_image: search, ground_truth: ground})
+                            feed_dict={
+                                vgg.key_img: key,
+                                vgg.search_img: search,
+                                vgg.key_bb: key_bb,
+                                vgg.search_bb: search_bb})
 
-                    cat_loss_sum += batch_size * loss
-                    num_samples += batch_size
-                    #print '[TRAIN] Batch loss on %s %s: %.5f' % (train_cat, key_name, loss)
+                    epoch_loss_sum += BATCH_SIZE * loss
+                    num_samples += BATCH_SIZE
 
-                cat_loss = cat_loss_sum / num_samples
-                epoch_loss_sum += cat_loss
-                print '[TRAIN] Category loss on %s: %.5f' % (train_cat, loss)
-
-            epoch_loss = epoch_loss_sum / len(TRAIN_CATS)   # Treats all categories equally weighted (ignores # samples)
-            print '[TRAIN] Epoch loss on %d: %.5f' % (epoch, epoch_loss)
-            valid_loss = run_validation(sess, vgg, key_image, search_image, ground_truth)
-            print '[VALID] Validation loss after epoch %d: %.5f' % (epoch, valid_loss)
+            epoch_loss = epoch_loss_sum / num_samples
+            print '[TRAIN] Epoch %d loss: %.5f' % (epoch+1, epoch_loss)
+            valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
+        print '[VALID] Epoch %d, validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@20: %.5f' % (epoch+1, valid_loss, iou1, iou5, iou20)
 
             # checkpointing
-            diagnostic_corr_maps(sess, vgg, 'epoch_%s.png' % str(epoch+1).zfill(3), key_image, search_image, ground_truth)
+            diagnostic_corr_maps(sess, vgg, 'epoch_%s.png' % str(epoch+1).zfill(3))
             #vgg.save_npy(sess, './trained_model_epoch_%d_%s.npy' % (epoch+1, str(int(time.time()))))
 
         dur = time.time() - start
