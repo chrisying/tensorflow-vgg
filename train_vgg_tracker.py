@@ -74,6 +74,10 @@ def run_validation(sess, vgg):
         key_names = os.listdir(data_dir)
         for key_name in key_names:
             #print 'Running validation on %s' % key_name
+            a = load_batch(category, key_name)
+            print type(a)
+            print len(a)
+            print a
             key, search, key_bb, search_bb = load_batch(category, key_name)
             if key is None:
                 continue
