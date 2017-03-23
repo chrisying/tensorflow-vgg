@@ -35,7 +35,7 @@ def load_batch(category, key_name):
 
         if num_frames < BATCH_SIZE:
             print 'Skipping %s %s because batch too small' % (category, key_name)
-            return None, None, None, None, None
+            return None, None, None, None
 
         search_batch = np.zeros([BATCH_SIZE, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3], dtype=np.uint8)
         search_bb = np.zeros([BATCH_SIZE, 4])
@@ -75,9 +75,6 @@ def run_validation(sess, vgg):
         for key_name in key_names:
             #print 'Running validation on %s' % key_name
             a = load_batch(category, key_name)
-            print type(a)
-            print len(a)
-            print a
             key, search, key_bb, search_bb = load_batch(category, key_name)
             if key is None:
                 continue
