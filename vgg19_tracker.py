@@ -283,7 +283,7 @@ class Vgg19:
     def IOU(self, prediction, key_bb, search_bb):
         shape = prediction.get_shape().as_list()    # [batch, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1]
         assert(shape[3] == 1)
-        offset = tf.argmax(tf.reshape(prediction, [shape[0], shape[1] * shape[2]]), axis=1)
+        offset = tf.argmax(tf.reshape(prediction, [-1, shape[1] * shape[2]]), axis=1)
         offset_x = offset % SEARCH_FRAME_SIZE
         offset_y = tf.floordiv(offset, SEARCH_FRAME_SIZE)
 
