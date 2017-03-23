@@ -165,7 +165,7 @@ def diagnostic_corr_maps(sess, vgg, name):
     print gt.shape
     print np.max(gt)
     print np.min(gt)
-    img = Image.fromarray((gt[0,:,:,:] * 255).astype(np.uint8))
+    img = Image.fromarray((gt[0,:,:,0] * 255).astype(np.uint8))
     img.save('gt.png')
 
     #visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
