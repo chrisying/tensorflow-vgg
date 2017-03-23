@@ -161,14 +161,11 @@ def diagnostic_corr_maps(sess, vgg, name):
     debug_search = debug_search[15:16,:,:,:]
     debug_search_bb = debug_search_bb[15:16,:]
 
-    gt = sess.run(vgg.ground_truth, feed_dict={vgg.search_bb: debug_search_bb})
-    print gt.shape
-    print np.max(gt)
-    print np.min(gt)
-    img = Image.fromarray((gt[0,:,:,0] * 255).astype(np.uint8))
-    img.save('gt.png')
+    #gt = sess.run(vgg.ground_truth, feed_dict={vgg.search_bb: debug_search_bb})
+    #img = Image.fromarray((gt[0,:,:,0] * 255).astype(np.uint8))
+    #img.save('gt.png')
 
-    #visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
+    visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
 
 def main():
 #    with tf.device('/cpu:0'):
@@ -196,7 +193,6 @@ def main():
         print map(lambda x:x.name, vgg.gate_var_list)
 
         diagnostic_corr_maps(sess, vgg, 'initial.png')
-        '''
 
         #valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
         #print '[VALID] Initial validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@20: %.5f' % (valid_loss, iou1, iou5, iou20)
@@ -239,12 +235,9 @@ def main():
         dur = time.time() - start
         print 'Training completed in %d seconds' % dur
 
-        #diagnostic_corr_maps(sess, vgg, 'final_corr_maps.png', key_image, search_image, ground_truth)
-
         # save model
         #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
         sess.close()
-        '''
 
 if __name__ == '__main__':
     main()
