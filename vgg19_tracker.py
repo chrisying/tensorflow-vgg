@@ -287,6 +287,9 @@ class Vgg19:
         offset_x = tf.cast(offset % SEARCH_FRAME_SIZE, tf.float32)
         offset_y = tf.cast(tf.floordiv(offset, SEARCH_FRAME_SIZE), tf.float32)
 
+        print 'offset shape'
+        print offset.get_shape().as_list()
+
         # top left + bottom right coords for prediction
         boxA_x1 = offset_x - key_bb[0] / 2
         boxA_y1 = offset_y - key_bb[1] / 2
