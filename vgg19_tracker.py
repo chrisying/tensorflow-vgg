@@ -42,7 +42,7 @@ class Vgg19:
         self.search_bb = tf.placeholder(tf.float32, [None, 4])
 
         # Convert RGB to BGR
-        key_red, key_green, key_blue = tf.split(axis=3, num_or_size_splits=3, value=key_img)
+        key_red, key_green, key_blue = tf.split(axis=3, num_or_size_splits=3, value=self.key_img)
         key_bgr = tf.concat(axis=3, values=[
             key_blue - VGG_MEAN[0],
             key_green - VGG_MEAN[1],
@@ -50,7 +50,7 @@ class Vgg19:
         ])
         assert key_bgr.get_shape().as_list() == [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3]
 
-        search_red, search_green, search_blue = tf.split(axis=3, num_or_size_splits=3, value=search_img)
+        search_red, search_green, search_blue = tf.split(axis=3, num_or_size_splits=3, value=self.search_img)
         search_bgr = tf.concat(axis=3, values=[
             search_blue - VGG_MEAN[0],
             search_green - VGG_MEAN[1],
