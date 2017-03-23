@@ -170,8 +170,8 @@ class Vgg19:
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
         self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
         self.IOU = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
-        self.IOU_at_1 = self.IOU[0, :]
-        self.IOU_at_5 = tf.reduce_mean(self.IOU[:5, :])
+        self.IOU_at_1 = self.IOU[0]
+        self.IOU_at_5 = tf.reduce_mean(self.IOU[:5])
         self.IOU_full = tf.reduce_mean(self.IOU)
 
         # TODO: add computation cost
@@ -307,6 +307,9 @@ class Vgg19:
         inter_y1 = tf.maximum(boxA_y1, boxB_y1)
         inter_x2 = tf.minimum(boxA_x2, boxB_x2)
         inter_y2 = tf.minimum(boxA_y2, boxB_y2)
+
+        print 'inter_x1 shape'
+        print inter_x1.get_shape().as_list()
 
         inter_area = tf.where(
                 tf.logical_and(inter_x1 < inter_x2, inter_y1 < inter_y2),    # true iff intersecting boxes
