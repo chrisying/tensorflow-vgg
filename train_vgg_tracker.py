@@ -18,9 +18,6 @@ from CONSTANTS import *
 EPSILON = 1e-5
 
 def load_batch(category, key_name):
-    # If return_dims == True, returns 2 additional values, corresponding to
-    #       (key_width, key_height) [B x 4 array of (offset_x, offset_y, s_width, s_height)]
-    # used for visualization only, dimensions are in SCALED image scale
     data_dir = os.path.join(PROCESSED_DIR, category, key_name)
     key_frame = Image.open(os.path.join(data_dir, key_name + '.png'))
     key_data = np.array(key_frame).reshape([1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
@@ -79,11 +76,13 @@ def run_validation(sess, vgg):
             if key is None:
                 continue
 
-            loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            iou, loss, iou1, iou5, iou20 = sess.run([vgg.IOU, vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
                     feed_dict={vgg.key_img: key,
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
                                vgg.search_bb: search_bb})
+            print iou
+            print np.max(iou)
             #print '[VALID] Batch loss on %s %s: %.5f' % (category, key_name, loss)
             test_loss_sum += BATCH_SIZE * loss
             iou1_sum += BATCH_SIZE * iou1
