@@ -281,11 +281,11 @@ class Vgg19:
         return loss
 
     def IOU(self, prediction, key_bb, search_bb):
-        shape = prediction.get_shape().as_list()    # [batch, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1]
+        shape = prediction.get_shape().as_list()    # [None, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1]
         assert(shape[3] == 1)
         offset = tf.argmax(tf.reshape(prediction, [-1, shape[1] * shape[2]]), axis=1)
-        offset_x = offset % SEARCH_FRAME_SIZE
-        offset_y = tf.floordiv(offset, SEARCH_FRAME_SIZE)
+        offset_x = tf.cast(offset % SEARCH_FRAME_SIZE, tf.float32)
+        offset_y = tf.cast(tf.floordiv(offset, SEARCH_FRAME_SIZE), tf.float32)
 
         # top left + bottom right coords for prediction
         boxA_x1 = offset_x - key_bb[0] / 2
