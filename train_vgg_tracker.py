@@ -86,9 +86,9 @@ def run_validation(sess, vgg):
                                vgg.search_bb: search_bb})
             #print '[VALID] Batch loss on %s %s: %.5f' % (category, key_name, loss)
             test_loss_sum += BATCH_SIZE * loss
-            iou1_sum += iou1
-            iou5_sum += iou5
-            iou20_sum += iou20
+            iou1_sum += BATCH_SIZE * iou1
+            iou5_sum += BATCH_SIZE * iou5
+            iou20_sum += BATCH_SIZE * iou20
             num_samples += BATCH_SIZE
 
     assert(num_samples > 0)
