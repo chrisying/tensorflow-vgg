@@ -308,7 +308,7 @@ class Vgg19:
         inter_area = tf.where(
                 tf.logical_and(inter_x1 < inter_x2, inter_y1 < inter_y2),    # true iff intersecting boxes
                 (inter_x2 - inter_x1) * (inter_y2 - inter_y1),
-                tf.zeros_like(offset))    # non-intersecting boxes, area = 0
+                tf.zeros_like(offset_x))    # non-intersecting boxes, area = 0
 
         boxA_area = (boxA_x2 - boxA_x1) * (boxA_y2 - boxA_y1)
         boxB_area = (boxB_x2 - boxB_x1) * (boxB_y2 - boxB_y1)
