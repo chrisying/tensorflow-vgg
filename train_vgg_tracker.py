@@ -38,7 +38,7 @@ def load_batch(category, key_name):
             return None, None, None, None, None
 
         search_batch = np.zeros([BATCH_SIZE, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3], dtype=np.uint8)
-        search_truths = np.zeros([BATCH_SIZE, 4])
+        search_bb = np.zeros([BATCH_SIZE, 4])
 
         for s_idx in range(BATCH_SIZE):
             search_line = search_lines[s_idx]
@@ -48,10 +48,10 @@ def load_batch(category, key_name):
 
             offset_x, offset_y, s_width, s_height = map(float, search_line[17:].split())
 
-            search_truths[s_idx, 0] = offset_x * s
-            search_truths[s_idx, 1] = offset_y * s
-            search_truths[s_idx, 2] = s_width * s
-            search_truths[s_idx, 3] = s_height * s
+            search_bb[s_idx, 0] = offset_x * s
+            search_bb[s_idx, 1] = offset_y * s
+            search_bb[s_idx, 2] = s_width * s
+            search_bb[s_idx, 3] = s_height * s
 
             # Add circle of radium TRUTH_RADIUS of +1 to ground truth using mask
             #offset_x_full, offset_y_full = offset_x * s, offset_y * s
@@ -60,7 +60,8 @@ def load_batch(category, key_name):
             #mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
             #ground_truth[s_idx, :, :, :][mask] = 1
 
-    return key_data, search_batch, np.array([w*s, h*s]), search_truths
+    print search_bb.shape
+    return key_data, search_batch, np.array([w*s, h*s]), search_bb
 
 def run_validation(sess, vgg):
     test_loss_sum = 0.0
