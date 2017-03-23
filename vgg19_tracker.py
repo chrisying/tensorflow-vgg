@@ -287,8 +287,6 @@ class Vgg19:
         offset_x = tf.cast(offset % SEARCH_FRAME_SIZE, tf.float32)
         offset_y = tf.cast(tf.floordiv(offset, SEARCH_FRAME_SIZE), tf.float32)
 
-        print 'offset shape'
-        print offset.get_shape().as_list()
         print 'offset_x shape'
         print offset_x.get_shape().as_list()
 
@@ -298,21 +296,20 @@ class Vgg19:
         boxA_x2 = offset_x + key_bb[0] / 2
         boxA_y2 = offset_y + key_bb[1] / 2
 
-        print 'boxA_x1 shape'
-        print boxA_x1.get_shape().as_list()
-
         # top left + bottom right coords for ground truth
-        boxB_x1 = search_bb[0] - search_bb[2] / 2
-        boxB_y1 = search_bb[1] - search_bb[3] / 2
-        boxB_x2 = search_bb[0] + search_bb[2] / 2
-        boxB_y2 = search_bb[1] + search_bb[3] / 2
+        boxB_x1 = search_bb[:, 0] - search_bb[:, 2] / 2
+        boxB_y1 = search_bb[:, 1] - search_bb[:, 3] / 2
+        boxB_x2 = search_bb[:, 0] + search_bb[:, 2] / 2
+        boxB_y2 = search_bb[:, 1] + search_bb[:, 3] / 2
+
+        print 'boxB_x1 shape'
+        print boxB_x1.get_shape().as_list()
 
         # interior bb
         inter_x1 = tf.maximum(boxA_x1, boxB_x1)
         inter_y1 = tf.maximum(boxA_y1, boxB_y1)
         inter_x2 = tf.minimum(boxA_x2, boxB_x2)
         inter_y2 = tf.minimum(boxA_y2, boxB_y2)
-
 
         inter_area = tf.where(
                 tf.logical_and(inter_x1 < inter_x2, inter_y1 < inter_y2),    # true iff intersecting boxes
