@@ -78,7 +78,7 @@ def run_validation(sess, vgg):
             if key is None:
                 continue
 
-            loss, iou1 iou5, iou20 = sess.run(vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_at_20,
+            loss, iou1 iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_at_20],
                     feed_dict={vgg.key_img: key,
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
@@ -232,6 +232,7 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        sess.close()
 
 if __name__ == '__main__':
     main()
