@@ -34,7 +34,7 @@ def load_batch(category, key_name):
         num_frames = len(search_lines)
 
         if num_frames < BATCH_SIZE:
-            print 'Skipping %s %s because batch too small' % (category, key_name)
+            #print 'Skipping %s %s because batch too small' % (category, key_name)
             return None, None, None, None
 
         search_batch = np.zeros([BATCH_SIZE, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3], dtype=np.uint8)
@@ -92,6 +92,7 @@ def run_validation(sess, vgg):
             num_samples += BATCH_SIZE
 
     assert(num_samples > 0)
+    print '[VALID] Samples considered: %d' % num_samples
     return test_loss_sum / num_samples, iou1_sum / num_samples, iou5_sum / num_samples, iou20_sum / num_samples
 
 def convert_corr_map(corr_map):
@@ -218,6 +219,7 @@ def main():
                     num_samples += BATCH_SIZE
 
             epoch_loss = epoch_loss_sum / num_samples
+            print '[TRAIN] Samples considered: %d' % num_samples
             print '[TRAIN] Epoch %d loss: %.5f' % (epoch+1, epoch_loss)
             valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
             print '[VALID] Epoch %d, validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@20: %.5f' % (epoch+1, valid_loss, iou1, iou5, iou20)
