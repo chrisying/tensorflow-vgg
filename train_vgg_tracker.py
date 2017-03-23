@@ -78,7 +78,7 @@ def run_validation(sess, vgg):
             if key is None:
                 continue
 
-            loss, iou1 iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
                     feed_dict={vgg.key_img: key,
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
