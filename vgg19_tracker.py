@@ -306,7 +306,7 @@ class Vgg19:
         inter_y2 = tf.minimum(boxA_y2, boxB_y2)
 
         inter_area = tf.where(
-                inter_x1 < inter_x2 and inter_y1 < inter_y2,    # true iff intersecting boxes
+                tf.logical_and(inter_x1 < inter_x2, inter_y1 < inter_y2),    # true iff intersecting boxes
                 (inter_x2 - inter_x1) * (inter_y2 - inter_y1),
                 tf.zeros_like(inter_x1))    # non-intersecting boxes
 
