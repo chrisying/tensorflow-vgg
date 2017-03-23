@@ -60,7 +60,6 @@ def load_batch(category, key_name):
             #mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
             #ground_truth[s_idx, :, :, :][mask] = 1
 
-    print search_bb.shape
     return key_data, search_batch, np.array([w*s, h*s]), search_bb
 
 def run_validation(sess, vgg):
@@ -158,8 +157,7 @@ def diagnostic_corr_maps(sess, vgg, name):
     debug_key, debug_search, debug_key_bb, debug_search_bb = load_batch('basketball', 'key-00000031')
     assert(debug_key is not None)
     debug_search = debug_search[10:11,:,:,:]
-    debug_search_bb = debug_search[10:11,:]
-    print debug_search_bb.shape
+    debug_search_bb = debug_search_bb[10:11,:]
 
     visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
 
