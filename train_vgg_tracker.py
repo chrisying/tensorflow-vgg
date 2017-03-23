@@ -156,10 +156,10 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_dims, search_t
 def diagnostic_corr_maps(sess, vgg, name):
     debug_key, debug_search, debug_key_bb, debug_search_bb = load_batch('basketball', 'key-00000031')
     assert(debug_key is not None)
-    debug_search = debug_search[20:21,:,:,:]
-    debug_search_bb = debug_search[20:21,:]
+    debug_search = debug_search[10:11,:,:,:]
+    debug_search_bb = debug_search[10:11,:]
 
-    visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb[20])
+    visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
 
 def main():
 #    with tf.device('/cpu:0'):
