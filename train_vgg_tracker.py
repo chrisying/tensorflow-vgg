@@ -161,7 +161,7 @@ def diagnostic_corr_maps(sess, vgg, name):
     debug_search = debug_search[15:16,:,:,:]
     debug_search_bb = debug_search_bb[15:16,:]
 
-    gt = sess.run(vgg.ground_truth, feed_dict={vgg.search_bb: debug.search_bb})
+    gt = sess.run(vgg.ground_truth, feed_dict={vgg.search_bb: debug_search_bb})
     print gt.shape
     print np.max(gt)
     print np.min(gt)
