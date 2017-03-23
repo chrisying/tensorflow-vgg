@@ -151,11 +151,11 @@ class Vgg19:
         self.gate5 = self.extract_corr_features(self.corr5, SEARCH_FRAME_SIZE / 2 ** 4)
 
         # Confidence of gates
-        #self.conf1 = self.confidence_layer(self.gate1, 'conf1')
-        #self.conf2 = self.confidence_layer(self.gate2, 'conf2')
-        #self.conf3 = self.confidence_layer(self.gate3, 'conf3')
-        #self.conf4 = self.confidence_layer(self.gate4, 'conf4')
-        #self.conf5 = self.confidence_layer(self.gate5, 'conf5')
+        self.conf1 = self.confidence_layer(self.gate1, 'conf1')
+        self.conf2 = self.confidence_layer(self.gate2, 'conf2')
+        self.conf3 = self.confidence_layer(self.gate3, 'conf3')
+        self.conf4 = self.confidence_layer(self.gate4, 'conf4')
+        self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
         # Prediction and loss
         self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
