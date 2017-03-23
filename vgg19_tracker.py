@@ -310,6 +310,9 @@ class Vgg19:
                 (inter_x2 - inter_x1) * (inter_y2 - inter_y1),
                 tf.zeros_like(offset_x))    # non-intersecting boxes, area = 0
 
+        print 'inter_area shape'
+        print inter_area.get_shape().as_list()
+
         boxA_area = (boxA_x2 - boxA_x1) * (boxA_y2 - boxA_y1)
         boxB_area = (boxB_x2 - boxB_x1) * (boxB_y2 - boxB_y1)
 
