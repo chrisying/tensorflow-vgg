@@ -287,9 +287,6 @@ class Vgg19:
         offset_x = tf.cast(offset % SEARCH_FRAME_SIZE, tf.float32)
         offset_y = tf.cast(tf.floordiv(offset, SEARCH_FRAME_SIZE), tf.float32)
 
-        print 'offset_x shape'
-        print offset_x.get_shape().as_list()
-
         # top left + bottom right coords for prediction
         boxA_x1 = offset_x - key_bb[0] / 2
         boxA_y1 = offset_y - key_bb[1] / 2
@@ -302,9 +299,6 @@ class Vgg19:
         boxB_x2 = search_bb[:, 0] + search_bb[:, 2] / 2
         boxB_y2 = search_bb[:, 1] + search_bb[:, 3] / 2
 
-        print 'boxB_x1 shape'
-        print boxB_x1.get_shape().as_list()
-
         # interior bb
         inter_x1 = tf.maximum(boxA_x1, boxB_x1)
         inter_y1 = tf.maximum(boxA_y1, boxB_y1)
@@ -316,18 +310,12 @@ class Vgg19:
                 (inter_x2 - inter_x1) * (inter_y2 - inter_y1),
                 tf.zeros_like(offset_x))    # non-intersecting boxes, area = 0
 
-        print 'inter_area shape'
-        print inter_area.get_shape().as_list()
-
         boxA_area = (boxA_x2 - boxA_x1) * (boxA_y2 - boxA_y1)
         boxB_area = (boxB_x2 - boxB_x1) * (boxB_y2 - boxB_y1)
 
         iou = inter_area / (boxA_area + boxB_area - inter_area)
-        print 'iou shape'
-        print iou.get_shape().as_list()
 
         return iou
-
 
     def non_max_suppression(self, input, window_size):
         # input = B x W x H x C

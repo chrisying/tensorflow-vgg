@@ -101,7 +101,7 @@ def convert_corr_map(corr_map):
     #im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
     return im
 
-def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_dims, search_truth):
+def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
     [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
             [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
@@ -109,8 +109,8 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_dims, search_t
             feed_dict={
                 vgg.key_img: key_img,
                 vgg.search_img: search_img,
-                vgg.key_bb: key_dims,
-                vgg.search_bb: search_truth})
+                vgg.key_bb: key_bb,
+                vgg.search_bb: search_bb})
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
@@ -158,6 +158,7 @@ def diagnostic_corr_maps(sess, vgg, name):
     assert(debug_key is not None)
     debug_search = debug_search[10:11,:,:,:]
     debug_search_bb = debug_search[10:11,:]
+    print debug_search_bb.shape
 
     visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
 
