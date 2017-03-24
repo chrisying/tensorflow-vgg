@@ -268,9 +268,10 @@ class Vgg19:
         normalized_ground_truth = ground_truth / tf.reduce_sum(ground_truth, axis=[1,2,3], keep_dims=True)
 
         # Intentional that scale is calculated over entire batch (prevents div 0 errors)
-        num_positive = tf.reduce_sum(tf.cast(ground_truth > 0.1, tf.float32))
+        pos_threshold = 0.2
+        num_positive = tf.reduce_sum(tf.cast(ground_truth > pos_threshold.2, tf.float32))
         scale = tf.reduce_sum(tf.ones_like(ground_truth, dtype=tf.float32)) / num_positive
-        weight = tf.where(ground_truth > 0.1, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
+        weight = tf.where(ground_truth > pos_threshold, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
 
         reshaped_ground_truth = tf.reshape(normalized_ground_truth, flattened_shape)
         reshaped_prediction = tf.reshape(prediction, flattened_shape)
