@@ -105,9 +105,10 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
-    [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
+    [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, px1, py1, px2, py2] = sess.run(
             [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
-             vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5],
+             vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5,
+             vgg.pred_box[0], vgg.pred_box[1], vgg.pred_box[2], vgg.pred_box[3]],
             feed_dict={
                 vgg.key_img: key_img,
                 vgg.search_img: search_img,
@@ -144,7 +145,8 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb)
                   SEARCH_FRAME_SIZE / 2 + search_bb[0, 1] - search_bb[0, 3] / 2,
                   SEARCH_FRAME_SIZE / 2 + search_bb[0, 0] + search_bb[0, 2] / 2,
                   SEARCH_FRAME_SIZE / 2 + search_bb[0, 1] + search_bb[0, 3] / 2],
-                outline='red')
+                outline='green')
+    ds.rectange([px1[0], py1[0], px2[0], py2[0]], outlint='red')
     new_im.paste(search_img, (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
 
     for i, ci in enumerate([c1,c2,c3,c4,c5]):

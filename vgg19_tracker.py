@@ -169,7 +169,7 @@ class Vgg19:
 
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
         self.raw_loss, self.weight = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
-        self.IOU = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
+        self.IOU, self.pred_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
         self.IOU_at_1 = self.IOU[0]
         self.IOU_at_5 = tf.reduce_mean(self.IOU[:5])
         self.IOU_full = tf.reduce_mean(self.IOU)
@@ -317,7 +317,7 @@ class Vgg19:
 
         iou = inter_area / (boxA_area + boxB_area - inter_area)
 
-        return iou
+        return iou, (boxA_x1, boxA_y1, boxA_x2, boxA_y2)
 
     def non_max_suppression(self, input, window_size):
         # input = B x W x H x C
