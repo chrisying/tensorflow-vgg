@@ -160,7 +160,7 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb)
     new_im.save(name)
 
 def diagnostic_corr_maps(sess, vgg, name):
-    debug_key, debug_search, debug_key_bb, debug_search_bb = load_batch('basketball', 'key-00000031')
+    debug_key, debug_search, debug_key_bb, debug_search_bb = load_batch('basketball', 'key-00000071')
     assert(debug_key is not None)
     debug_search = debug_search[15:16,:,:,:]
     debug_search_bb = debug_search_bb[15:16,:]
