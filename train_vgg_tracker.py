@@ -113,10 +113,13 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb)
                 vgg.search_img: search_img,
                 vgg.key_bb: key_bb,
                 vgg.search_bb: search_bb})
+
     print weight
     print np.sum(gts)
     print np.max(weight)
     print np.sum(weight)
+    print np.sum(gts > 0.5)
+    print np.sum(gts > 0.1)
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
