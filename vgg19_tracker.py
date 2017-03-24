@@ -158,9 +158,8 @@ class Vgg19:
         self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
         # Prediction and loss
-        self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
-        #self.raw_prediction = self.rcorr5
-        #self.raw_prediction = self.rcorr5
+        #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
+        self.raw_prediction = self.rcorr5
         self.gated_prediction = ((self.conf1 * self.rcorr1 +
                                   self.conf2 * self.rcorr2 +
                                   self.conf3 * self.rcorr3 +
@@ -169,8 +168,8 @@ class Vgg19:
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
-        self.raw_loss, self.pred = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
-        self.IOU, self.pred_box, self.ground_box, self.inter_area = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
+        self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
+        self.IOU, self.pred_box, self.ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
         self.IOU_at_1 = self.IOU[0]
         self.IOU_at_5 = tf.reduce_mean(self.IOU[:5])
         self.IOU_full = tf.reduce_mean(self.IOU)
@@ -282,7 +281,7 @@ class Vgg19:
         softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=reshaped_prediction, labels=reshaped_ground_truth)
         loss = tf.reduce_mean(softmax_loss)
 
-        return loss, reshaped_prediction
+        return loss
 
     def IOU(self, prediction, key_bb, search_bb):
         shape = prediction.get_shape().as_list()    # [None, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1]
@@ -319,7 +318,7 @@ class Vgg19:
 
         iou = inter_area / (boxA_area + boxB_area - inter_area)
 
-        return iou, (boxA_x1, boxA_y1, boxA_x2, boxA_y2), (boxB_x1, boxB_y1, boxB_x2, boxB_y2), inter_area
+        return iou, (boxA_x1, boxA_y1, boxA_x2, boxA_y2), (boxB_x1, boxB_y1, boxB_x2, boxB_y2)
 
     def non_max_suppression(self, input, window_size):
         # input = B x W x H x C
