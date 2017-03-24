@@ -198,7 +198,7 @@ def main():
         print 'Trainable variables (gate):'
         print map(lambda x:x.name, vgg.gate_var_list)
 
-        #diagnostic_corr_maps(sess, vgg, 'initial.png')
+        diagnostic_corr_maps(sess, vgg, 'initial.png')
 
         valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
         print '[VALID] Initial validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@20: %.5f' % (valid_loss, iou1, iou5, iou20)
