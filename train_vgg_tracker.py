@@ -147,7 +147,7 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb)
     #              SEARCH_FRAME_SIZE / 2 + search_bb[0, 0] + search_bb[0, 2] / 2,
     #              SEARCH_FRAME_SIZE / 2 + search_bb[0, 1] + search_bb[0, 3] / 2],
     #            outline='green')
-    ds.rectangle([ground_box[0[0]], ground_box[1][0], ground_box[2][0], ground_box[3][0]], outline='green')
+    ds.rectangle([ground_box[0][0], ground_box[1][0], ground_box[2][0], ground_box[3][0]], outline='green')
     ds.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
     new_im.paste(search_img, (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
 
