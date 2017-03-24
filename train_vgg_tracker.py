@@ -82,14 +82,14 @@ def run_validation(sess, vgg):
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
                                vgg.search_bb: search_bb})
-            print pred
-            print np.sum(pred)
-            print np.max(pred)
-            print np.min(pred)
-            print '--'
-            print rpred
-            print np.max(rpred)
-            print np.min(rpred)
+            #print pred
+            #print np.sum(pred)
+            #print np.max(pred)
+            #print np.min(pred)
+            #print '--'
+            #print rpred
+            #print np.max(rpred)
+            #print np.min(rpred)
 
             test_loss_sum += BATCH_SIZE * loss
             iou1_sum += BATCH_SIZE * iou1
@@ -120,6 +120,12 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb)
                 vgg.search_img: search_img,
                 vgg.key_bb: key_bb,
                 vgg.search_bb: search_bb})
+
+    print 'xcorr1: ' + str(np.max(vgg.rcorr1))
+    print 'xcorr2: ' + str(np.max(vgg.rcorr2))
+    print 'xcorr3: ' + str(np.max(vgg.rcorr3))
+    print 'xcorr4: ' + str(np.max(vgg.rcorr4))
+    print 'xcorr5: ' + str(np.max(vgg.rcorr5))
 
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
