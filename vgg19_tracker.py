@@ -281,7 +281,7 @@ class Vgg19:
         softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=reshaped_prediction, labels=reshaped_ground_truth)
         loss = tf.reduce_mean(softmax_loss)
 
-        return loss
+        return loss, reshaped_ground_truth, reshaped_prediction
 
     def IOU(self, prediction, key_bb, search_bb):
         shape = prediction.get_shape().as_list()    # [None, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1]
