@@ -158,7 +158,8 @@ class Vgg19:
         self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
         # Prediction and loss
-        self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
+        #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
+        self.raw_prediction = self.rcorr5
         #self.raw_prediction = self.rcorr5
         self.gated_prediction = ((self.conf1 * self.rcorr1 +
                                   self.conf2 * self.rcorr2 +
