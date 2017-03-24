@@ -169,7 +169,7 @@ class Vgg19:
 
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
         self.raw_loss, self.weight = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
-        self.IOU, self.pred_box, self.inter_area, self.inter_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
+        self.IOU, self.pred_box, self.ground_box, self.inter_area = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
         self.IOU_at_1 = self.IOU[0]
         self.IOU_at_5 = tf.reduce_mean(self.IOU[:5])
         self.IOU_full = tf.reduce_mean(self.IOU)
@@ -296,10 +296,10 @@ class Vgg19:
         boxA_y2 = offset_y + key_bb[1] / 2
 
         # top left + bottom right coords for ground truth
-        boxB_x1 = search_bb[:, 0] - search_bb[:, 2] / 2
-        boxB_y1 = search_bb[:, 1] - search_bb[:, 3] / 2
-        boxB_x2 = search_bb[:, 0] + search_bb[:, 2] / 2
-        boxB_y2 = search_bb[:, 1] + search_bb[:, 3] / 2
+        boxB_x1 = tf.constant(SEARCH_FRAME_SIZE / 2, dtype=tf.float32) + search_bb[:, 0] - search_bb[:, 2] / 2
+        boxB_y1 = tf.constant(SEARCH_FRAME_SIZE / 2, dtype=tf.float32) + search_bb[:, 1] - search_bb[:, 3] / 2
+        boxB_x2 = tf.constant(SEARCH_FRAME_SIZE / 2, dtype=tf.float32) + search_bb[:, 0] + search_bb[:, 2] / 2
+        boxB_y2 = tf.constant(SEARCH_FRAME_SIZE / 2, dtype=tf.float32) + search_bb[:, 1] + search_bb[:, 3] / 2
 
         # interior bb
         inter_x1 = tf.maximum(boxA_x1, boxB_x1)
@@ -317,7 +317,7 @@ class Vgg19:
 
         iou = inter_area / (boxA_area + boxB_area - inter_area)
 
-        return iou, (boxA_x1, boxA_y1, boxA_x2, boxA_y2), inter_area, (inter_x1, inter_y1, inter_x2, inter_y2)
+        return iou, (boxA_x1, boxA_y1, boxA_x2, boxA_y2), (boxB_x1, boxB_y1, boxB_x2, boxB_y2),inter_area
 
     def non_max_suppression(self, input, window_size):
         # input = B x W x H x C
