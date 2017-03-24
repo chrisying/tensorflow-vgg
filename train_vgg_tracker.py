@@ -92,7 +92,7 @@ def run_validation(sess, vgg):
             num_samples += BATCH_SIZE
 
     assert(num_samples > 0)
-    print '[VALID] Samples considered: %d' % num_samples
+    #print '[VALID] Samples considered: %d' % num_samples
     return test_loss_sum / num_samples, iou1_sum / num_samples, iou5_sum / num_samples, iou20_sum / num_samples
 
 def convert_corr_map(corr_map):
@@ -105,14 +105,15 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
-    [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
-            [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
+    [gts, cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
+            [vgg.ground_truth, vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
              vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5],
             feed_dict={
                 vgg.key_img: key_img,
                 vgg.search_img: search_img,
                 vgg.key_bb: key_bb,
                 vgg.search_bb: search_bb})
+    print np.sum(gts)
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
@@ -223,7 +224,7 @@ def main():
                     num_samples += BATCH_SIZE
 
             epoch_loss = epoch_loss_sum / num_samples
-            print '[TRAIN] Samples considered: %d' % num_samples
+            #print '[TRAIN] Samples considered: %d' % num_samples
             print '[TRAIN] Epoch %d loss: %.5f' % (epoch+1, epoch_loss)
 
             valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
