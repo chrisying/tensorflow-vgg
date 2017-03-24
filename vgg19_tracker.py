@@ -269,7 +269,7 @@ class Vgg19:
 
         # Intentional that scale is calculated over entire batch (prevents div 0 errors)
         pos_threshold = 0.2
-        num_positive = tf.reduce_sum(tf.cast(ground_truth > pos_threshold.2, tf.float32))
+        num_positive = tf.reduce_sum(tf.cast(ground_truth > pos_threshold, tf.float32))
         scale = tf.reduce_sum(tf.ones_like(ground_truth, dtype=tf.float32)) / num_positive
         weight = tf.where(ground_truth > pos_threshold, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
 
