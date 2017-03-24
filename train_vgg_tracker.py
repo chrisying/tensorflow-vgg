@@ -190,7 +190,7 @@ def main():
         print vgg.get_var_count()
 
         global_step = tf.Variable(0, trainable=False)
-        starter_learning_rate = 1e-1
+        starter_learning_rate = 1e-5
         decay_steps = 1000
         decay_rate = 0.95
 
