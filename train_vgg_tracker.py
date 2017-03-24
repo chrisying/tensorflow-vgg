@@ -105,15 +105,18 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
-    [gts, cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
-            [vgg.ground_truth, vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
+    [gts, weight, cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5] = sess.run(
+            [vgg.ground_truth, vgg.weight, vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
              vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5],
             feed_dict={
                 vgg.key_img: key_img,
                 vgg.search_img: search_img,
                 vgg.key_bb: key_bb,
                 vgg.search_bb: search_bb})
+    print weight
     print np.sum(gts)
+    print np.max(weight)
+    print np.sum(weight)
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
@@ -195,6 +198,7 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial.png')
 
+        '''
         valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
         print '[VALID] Initial validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@20: %.5f' % (valid_loss, iou1, iou5, iou20)
 
@@ -240,6 +244,7 @@ def main():
         # save model
         #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
         sess.close()
+        '''
 
 if __name__ == '__main__':
     main()
