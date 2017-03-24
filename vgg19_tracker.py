@@ -168,7 +168,7 @@ class Vgg19:
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
-        self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
+        self.raw_loss, self.gt, self.pred = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
         self.IOU, self.pred_box, self.ground_box, self.inter_area = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
         self.IOU_at_1 = self.IOU[0]
         self.IOU_at_5 = tf.reduce_mean(self.IOU[:5])
