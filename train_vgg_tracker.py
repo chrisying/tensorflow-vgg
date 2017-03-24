@@ -103,7 +103,7 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
-    [cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box] = sess.run(
+    cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = sess.run(
             [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
              vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5,
              vgg.pred_box, vgg.ground_box],
