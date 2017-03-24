@@ -113,6 +113,8 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb)
                 vgg.key_bb: key_bb,
                 vgg.search_bb: search_bb})
 
+    print cm1
+
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
