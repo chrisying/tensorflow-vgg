@@ -165,9 +165,9 @@ def diagnostic_corr_maps(sess, vgg, name):
     debug_search = debug_search[15:16,:,:,:]
     debug_search_bb = debug_search_bb[15:16,:]
 
-    #gt = sess.run(vgg.ground_truth, feed_dict={vgg.search_bb: debug_search_bb})
-    #img = Image.fromarray((gt[0,:,:,0] * 255).astype(np.uint8))
-    #img.save('gt.png')
+    gt = sess.run(vgg.ground_truth, feed_dict={vgg.search_bb: debug_search_bb})
+    img = Image.fromarray((gt[0,:,:,0] * 255).astype(np.uint8))
+    img.save('gt.png')
 
     visualize_corr_maps(sess, vgg, 'basketball_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
 
