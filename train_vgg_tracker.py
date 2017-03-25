@@ -82,7 +82,7 @@ def run_validation(sess, vgg):
                                    vgg.search_img: search[i:i+1, :, :, :],
                                    vgg.key_bb: key_bb,
                                    vgg.search_bb: search_bb[i:i+1, :]})
-                print 'frame %d: %.5f' % loss
+                print 'frame %d: %.5f' % (i, loss)
 
             #loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
             #        feed_dict={vgg.key_img: key,
