@@ -76,18 +76,25 @@ def run_validation(sess, vgg):
             if key is None:
                 continue
 
-            loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
-            #iou, loss, iou1, iou5, iou20 = sess.run([vgg.IOU, vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
-                    feed_dict={vgg.key_img: key,
-                               vgg.search_img: search,
-                               vgg.key_bb: key_bb,
-                               vgg.search_bb: search_bb})
+            for i in range(BATCH_SIZE):
+                loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+                        feed_dict={vgg.key_img: key,
+                                   vgg.search_img: search[i:i+1, :, :, :],
+                                   vgg.key_bb: key_bb,
+                                   vgg.search_bb: search_bb[i:i+1, :]})
+                print 'frame %d: %.5f' % loss
 
-            test_loss_sum += BATCH_SIZE * loss
-            iou1_sum += BATCH_SIZE * iou1
-            iou5_sum += BATCH_SIZE * iou5
-            iou20_sum += BATCH_SIZE * iou20
-            num_samples += BATCH_SIZE
+            #loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            #        feed_dict={vgg.key_img: key,
+            #                   vgg.search_img: search,
+            #                   vgg.key_bb: key_bb,
+            #                   vgg.search_bb: search_bb})
+
+            #test_loss_sum += BATCH_SIZE * loss
+            #iou1_sum += BATCH_SIZE * iou1
+            #iou5_sum += BATCH_SIZE * iou5
+            #iou20_sum += BATCH_SIZE * iou20
+            #num_samples += BATCH_SIZE
 
     assert(num_samples > 0)
     #print '[VALID] Samples considered: %d' % num_samples
