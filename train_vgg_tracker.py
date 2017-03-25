@@ -76,27 +76,27 @@ def run_validation(sess, vgg):
             if key is None:
                 continue
 
-            for i in range(BATCH_SIZE):
-                loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
-                        feed_dict={vgg.key_img: key,
-                                   vgg.search_img: search[i:i+1, :, :, :],
-                                   vgg.key_bb: key_bb,
-                                   vgg.search_bb: search_bb[i:i+1, :]})
-                print 'frame %d: %.5f' % (i, loss)
+            #for i in range(BATCH_SIZE):
+            #    loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            #            feed_dict={vgg.key_img: key,
+            #                       vgg.search_img: search[i:i+1, :, :, :],
+            #                       vgg.key_bb: key_bb,
+            #                       vgg.search_bb: search_bb[i:i+1, :]})
+            #    print 'frame %d: %.5f' % (i, loss)
 
-            #loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
-            #        feed_dict={vgg.key_img: key,
-            #                   vgg.search_img: search,
-            #                   vgg.key_bb: key_bb,
-            #                   vgg.search_bb: search_bb})
+            loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+                    feed_dict={vgg.key_img: key,
+                               vgg.search_img: search,
+                               vgg.key_bb: key_bb,
+                               vgg.search_bb: search_bb})
 
-            #test_loss_sum += BATCH_SIZE * loss
-            #iou1_sum += BATCH_SIZE * iou1
-            #iou5_sum += BATCH_SIZE * iou5
-            #iou20_sum += BATCH_SIZE * iou20
-            #num_samples += BATCH_SIZE
+            test_loss_sum += BATCH_SIZE * loss
+            iou1_sum += BATCH_SIZE * iou1
+            iou5_sum += BATCH_SIZE * iou5
+            iou20_sum += BATCH_SIZE * iou20
+            num_samples += BATCH_SIZE
 
-    #assert(num_samples > 0)
+    assert(num_samples > 0)
     #print '[VALID] Samples considered: %d' % num_samples
     return test_loss_sum / num_samples, iou1_sum / num_samples, iou5_sum / num_samples, iou20_sum / num_samples
 

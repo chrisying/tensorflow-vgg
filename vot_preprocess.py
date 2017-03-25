@@ -29,6 +29,7 @@ from PIL import Image, ImageOps
 from CONSTANTS import *
 
 def convert_to_xywh(gt_line):
+    # returns top-left x, top-left y, width, height
     x1,y1,x2,y2,x3,y3,x4,y4 = map(float, gt_line.split(','))
     x = (x1 + x4) / 2
     y = (y1 + y2) / 2
@@ -130,7 +131,7 @@ def main():
                     offset_x = (sx + sw/2) - (x + w/2)
                     offset_y = (sy + sh/2) - (y + h/2)
 
-                    if np.abs(offset_x * scale) > SEARCH_FRAME_SIZE / 2 or np.abs(offset_y * scale) > SEARCH_FRAME_SIZE:
+                    if np.abs(offset_x * scale) > SEARCH_FRAME_SIZE / 2 or np.abs(offset_y * scale) > SEARCH_FRAME_SIZE / 2:
                         print 'Object leaves frame at search frame %d, (batch size = %d)' % (search_frame_idx, img_idx)
                         break
 
