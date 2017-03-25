@@ -96,7 +96,7 @@ def run_validation(sess, vgg):
             #iou20_sum += BATCH_SIZE * iou20
             #num_samples += BATCH_SIZE
 
-    assert(num_samples > 0)
+    #assert(num_samples > 0)
     #print '[VALID] Samples considered: %d' % num_samples
     return test_loss_sum / num_samples, iou1_sum / num_samples, iou5_sum / num_samples, iou20_sum / num_samples
 
