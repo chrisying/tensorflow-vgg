@@ -231,7 +231,7 @@ def main():
                                 vgg.key_bb: key_bb,
                                 vgg.search_bb: search_bb})
 
-                    print '[TRAIN] Batch loss %s %s: %.5f' % (train_cat, key_name, loss)
+                    #print '[TRAIN] Batch loss %s %s: %.5f' % (train_cat, key_name, loss)
                     epoch_loss_sum += BATCH_SIZE * loss
                     num_samples += BATCH_SIZE
 
