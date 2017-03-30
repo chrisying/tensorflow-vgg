@@ -193,7 +193,7 @@ def main():
         decay_steps = 10000
         decay_rate = 0.95
 
-        #learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, decay_steps, decay_rate, staircase=True)
+        learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, decay_steps, decay_rate, staircase=True)
         train_finetune = tf.train.AdamOptimizer(learning_rate).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
         #train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
         #train_finetune = tf.train.MomentumOptimizer(1e-5, 0.9999).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
