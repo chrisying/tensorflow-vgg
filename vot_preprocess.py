@@ -87,6 +87,11 @@ def extract_search_frame(im, x, y, w, h, scale):
 
 def main():
     with open(os.path.join(VOT_DIR, 'list.txt')) as list_txt:
+
+        if not os.path.exists(PROCESSED_DIR):
+            os.makedirs(PROCESSED_DIR)
+        new_list = open(os.path.join(PROCESSED_DIR, 'list.txt'), 'w')
+
         for cat in list_txt.xreadlines():
             cat = cat.strip()
             print 'Begin processing %s' % cat
@@ -107,6 +112,7 @@ def main():
                 key_dir = os.path.join(output_dir, 'key-%s' % key_frame_name)
                 if not os.path.exists(key_dir):
                     os.makedirs(key_dir)
+                new_list.write('%s/key-%s\n' % (cat, key_frame_name))
 
                 key_im = Image.open(os.path.join(cat_dir, key_frame_name + '.jpg'))
                 x, y, w, h = convert_to_xywh(ground_truth[key_frame_idx - 1])
@@ -118,6 +124,7 @@ def main():
                 new_gt.write('key-%s: %.3f %.3f %.3f %.3f %.3f\n' %
                         (key_frame_name, x, y, w, h, scale))
 
+                prev_x, prev_y, prev_w, prev_h = x, y, w, h
 
                 # Process search frames
                 for img_idx in range(MAX_FRAME_GAP):
@@ -128,8 +135,8 @@ def main():
                     search_frame_name = str(search_frame_idx).zfill(8)
 
                     sx, sy, sw, sh = convert_to_xywh(ground_truth[search_frame_idx - 1])
-                    offset_x = (sx + sw/2) - (x + w/2)
-                    offset_y = (sy + sh/2) - (y + h/2)
+                    offset_x = (sx + sw/2) - (prev_x + w/2)
+                    offset_y = (sy + sh/2) - (prev_y + h/2)
 
                     if np.abs(offset_x * scale) > SEARCH_FRAME_SIZE / 2 or np.abs(offset_y * scale) > SEARCH_FRAME_SIZE / 2:
                         print 'Object leaves frame at search frame %d, (batch size = %d)' % (search_frame_idx, img_idx)
@@ -139,11 +146,14 @@ def main():
                             (search_frame_name, offset_x, offset_y, sw, sh))
 
                     search_im = Image.open(os.path.join(cat_dir, search_frame_name + '.jpg'))
-                    new_search_im = extract_search_frame(search_im, x, y, w, h, scale)
+                    new_search_im = extract_search_frame(search_im, prev_x, prev_y, prev_w, prev_h, scale)
                     search_output_name = 'search-%s.png' % (search_frame_name)
                     new_search_im.save(os.path.join(key_dir, search_output_name))
 
+                    prev_x, prev_y, prev_w, prev_h = sx, sy, sw, sh
+
                 new_gt.close()
+        new_list.close()
 
 if __name__ == '__main__':
     main()
