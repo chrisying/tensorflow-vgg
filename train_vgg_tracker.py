@@ -229,7 +229,7 @@ def main():
                         continue
 
                     #_, loss = sess.run([train_finetune, vgg.raw_loss],
-                    _, loss, iou1, iou5, iou50 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+                    _, loss, iou1, iou5, iou50 = sess.run([train_finetune, vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
                             feed_dict={
                                 vgg.key_img: key,
                                 vgg.search_img: search,
