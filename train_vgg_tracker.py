@@ -245,10 +245,11 @@ def main():
 
             epoch_loss = epoch_loss_sum / num_samples
             #print '[TRAIN] Samples considered: %d' % num_samples
-            print '[TRAIN] Epoch %d loss: %.5f' % (epoch+1, epoch_loss)
+            #print '[TRAIN] Epoch %d loss: %.5f' % (epoch+1, epoch_loss)
+            print '[TRAIN] Epoch %d, loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@50: %.5f' % (epoch+1, epoch_loss, iou1_sum / num_samples, iou5_sum / num_samples, iou50_sum / num_samples)
 
             valid_loss, iou1, iou5, iou50 = run_validation(sess, vgg)
-            print '[VALID] Epoch %d, validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@50: %.5f' % (epoch+1, valid_loss, iou1, iou5, iou50)
+            print '[VALID] Epoch %d, loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@50: %.5f' % (epoch+1, valid_loss, iou1, iou5, iou50)
 
             # checkpointing
             diagnostic_corr_maps(sess, vgg, 'epoch_%s.png' % str(epoch+1).zfill(3))
