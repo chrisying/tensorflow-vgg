@@ -63,7 +63,7 @@ def run_validation(sess, vgg):
     test_loss_sum = 0.0
     iou1_sum = 0.0
     iou5_sum = 0.0
-    iou20_sum = 0.0
+    iou50_sum = 0.0
     num_samples = 0
     for category in TEST_CATS:
         #print 'Running validation on %s' % category
@@ -77,14 +77,14 @@ def run_validation(sess, vgg):
                 continue
 
             #for i in range(BATCH_SIZE):
-            #    loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            #    loss, iou1, iou5, iou50 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
             #            feed_dict={vgg.key_img: key,
             #                       vgg.search_img: search[i:i+1, :, :, :],
             #                       vgg.key_bb: key_bb,
             #                       vgg.search_bb: search_bb[i:i+1, :]})
             #    print 'frame %d: %.5f' % (i, loss)
 
-            loss, iou1, iou5, iou20 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            loss, iou1, iou5, iou50 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
                     feed_dict={vgg.key_img: key,
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
@@ -93,12 +93,12 @@ def run_validation(sess, vgg):
             test_loss_sum += BATCH_SIZE * loss
             iou1_sum += BATCH_SIZE * iou1
             iou5_sum += BATCH_SIZE * iou5
-            iou20_sum += BATCH_SIZE * iou20
+            iou50_sum += BATCH_SIZE * iou50
             num_samples += BATCH_SIZE
 
     assert(num_samples > 0)
     #print '[VALID] Samples considered: %d' % num_samples
-    return test_loss_sum / num_samples, iou1_sum / num_samples, iou5_sum / num_samples, iou20_sum / num_samples
+    return test_loss_sum / num_samples, iou1_sum / num_samples, iou5_sum / num_samples, iou50_sum / num_samples
 
 def convert_corr_map(corr_map):
     corr_map = corr_map.reshape((corr_map.shape[1], corr_map.shape[2]))
@@ -188,14 +188,14 @@ def main():
         # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
         print vgg.get_var_count()
 
-        global_step = tf.Variable(0, trainable=False)
-        starter_learning_rate = 1e-5
-        decay_steps = 10000
-        decay_rate = 0.95
+        #global_step = tf.Variable(0, trainable=False)
+        #starter_learning_rate = 1e-5
+        #decay_steps = 10000
+        #decay_rate = 0.95
 
-        learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, decay_steps, decay_rate, staircase=True)
-        train_finetune = tf.train.AdamOptimizer(learning_rate).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
-        #train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
+        #learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, decay_steps, decay_rate, staircase=True)
+        #train_finetune = tf.train.AdamOptimizer(learning_rate).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
+        train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
         #train_finetune = tf.train.MomentumOptimizer(1e-5, 0.9999).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
         #train_gate = tf.train.AdamOptimizer(1e-5).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
         sess.run(tf.global_variables_initializer())
@@ -207,14 +207,17 @@ def main():
 
         diagnostic_corr_maps(sess, vgg, 'initial.png')
 
-        valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
-        print '[VALID] Initial validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@20: %.5f' % (valid_loss, iou1, iou5, iou20)
+        valid_loss, iou1, iou5, iou50 = run_validation(sess, vgg)
+        print '[VALID] Initial validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@50: %.5f' % (valid_loss, iou1, iou5, iou50)
 
         # TODO: use QueueRunner to optimize file loading on CPU
         print 'Starting training'
         start = time.time()
         for epoch in range(TRAIN_EPOCHS):
             epoch_loss_sum = 0.0
+            iou1_sum = 0.0
+            iou5_sum = 0.0
+            iou50_sum = 0.0
             num_samples = 0
             for train_cat in TRAIN_CATS:
                 cat_dir = os.path.join(PROCESSED_DIR, train_cat)
@@ -225,7 +228,8 @@ def main():
                     if key is None:
                         continue
 
-                    _, loss = sess.run([train_finetune, vgg.raw_loss],
+                    #_, loss = sess.run([train_finetune, vgg.raw_loss],
+                    _, loss, iou1, iou5, iou50 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
                             feed_dict={
                                 vgg.key_img: key,
                                 vgg.search_img: search,
@@ -234,14 +238,17 @@ def main():
 
                     #print '[TRAIN] Batch loss %s %s: %.5f' % (train_cat, key_name, loss)
                     epoch_loss_sum += BATCH_SIZE * loss
+                    iou1_sum += BATCH_SIZE * iou1
+                    iou5_sum += BATCH_SIZE * iou5
+                    iou50_sum += BATCH_SIZE * iou50
                     num_samples += BATCH_SIZE
 
             epoch_loss = epoch_loss_sum / num_samples
             #print '[TRAIN] Samples considered: %d' % num_samples
             print '[TRAIN] Epoch %d loss: %.5f' % (epoch+1, epoch_loss)
 
-            valid_loss, iou1, iou5, iou20 = run_validation(sess, vgg)
-            print '[VALID] Epoch %d, validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@20: %.5f' % (epoch+1, valid_loss, iou1, iou5, iou20)
+            valid_loss, iou1, iou5, iou50 = run_validation(sess, vgg)
+            print '[VALID] Epoch %d, validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@50: %.5f' % (epoch+1, valid_loss, iou1, iou5, iou50)
 
             # checkpointing
             diagnostic_corr_maps(sess, vgg, 'epoch_%s.png' % str(epoch+1).zfill(3))
@@ -251,7 +258,7 @@ def main():
         print 'Training completed in %d seconds' % dur
 
         # save model
-        #vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
         sess.close()
 
 if __name__ == '__main__':
