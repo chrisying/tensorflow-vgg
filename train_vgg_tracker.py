@@ -230,6 +230,7 @@ def main():
                 #for key_name in key_names:
                     # ordering shouldn't matter
                 train_cat, key_name = train_samples[train_idx].split('/')
+                key_name = key_name.strip()
 
                 key, search, key_bb, search_bb = load_batch(train_cat, key_name)
                 if key is None:
