@@ -224,7 +224,7 @@ def main():
                 train_samples = f.readlines()
             order = np.random.permutation(len(train_samples))
 
-            for train_idx in train_samples:
+            for train_idx in order:
                 #cat_dir = os.path.join(PROCESSED_DIR, train_cat)
                 #key_names = os.listdir(cat_dir)
                 #for key_name in key_names:
