@@ -291,6 +291,16 @@ def main():
 
         # save model
         vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+        np.save('training_metrics.npy', {
+            'validation_losses': validation_losses,
+            'validation_iou1s': validation_iou1s,
+            'validation_iou5s': validation_iou5s,
+            'validation_iou25s': validation_iou25s,
+            'train_losses': train_losses,
+            'train_iou1s': train_iou1s,
+            'train_iou5s': train_iou5s,
+            'train_iou25s': train_iou25s
+        })
         sess.close()
 
 if __name__ == '__main__':
