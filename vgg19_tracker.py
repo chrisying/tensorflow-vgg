@@ -235,6 +235,10 @@ class Vgg19:
         kurt = tf.pow(corr_mean, tf.constant(4.0)) / tf.pow(corr_var, tf.constant(2.0))
         kurt = tf.reshape(kurt, [-1, 1])    # B x 1
 
+        # Entropy
+        #hist= = tf.map_fn(
+        #        lambda cmap : tf.histogram(tf.reshape(cmap, [corr_size ** 2]), value_range=[
+
         # Top 5 peaks (raw)
         peaks, _ = tf.nn.top_k(tf.reshape(corr, [-1, corr_size ** 2]), k=5)     # B x 5
 
