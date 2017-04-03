@@ -96,8 +96,6 @@ def run_validation(sess, vgg):
             iou5_sum += BATCH_SIZE * iou5
             iou25_sum += BATCH_SIZE * iou25
             num_samples += BATCH_SIZE
-            print corr1
-            print corr5
             print np.min(corr1), np.max(corr1)
             print np.min(corr5), np.max(corr5)
 

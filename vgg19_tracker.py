@@ -218,15 +218,15 @@ class Vgg19:
             corr_white = (cross_corr - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
 
             # NOTE: these are never tuned if we don't fine tune
-            corr_bias = self.get_var(name, [1], 0, name + "_bias")
-            self.cnn_var_list.append(corr_bias)
-            bias = tf.nn.bias_add(corr_white, corr_bias)
+            #corr_bias = self.get_var(name, [1], 0, name + "_bias")
+            #self.cnn_var_list.append(corr_bias)
+            #bias = tf.nn.bias_add(corr_white, corr_bias)
             #output = tf.tanh(bias)
 
             #corr_mean, corr_var = tf.nn.moments(bias, [1,2,3], keep_dims=True)
             #corr_norm = (bias - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
 
-            return bias
+            return corr_white
 
     # TODO: add more features
     def extract_corr_features(self, corr, corr_size):
