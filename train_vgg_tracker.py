@@ -84,8 +84,8 @@ def run_validation(sess, vgg):
             #                       vgg.search_bb: search_bb[i:i+1, :]})
             #    print 'frame %d: %.5f' % (i, loss)
 
-            #loss, iou1, iou5, iou25 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
-            corr1, corr5, loss, iou1, iou5, iou25 = sess.run([vgg.corr1, vgg.corr5, vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            #corr1, corr5, loss, iou1, iou5, iou25 = sess.run([vgg.corr1, vgg.corr5, vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            loss, iou1, iou5, iou25 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
                     feed_dict={vgg.key_img: key,
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
@@ -96,8 +96,8 @@ def run_validation(sess, vgg):
             iou5_sum += BATCH_SIZE * iou5
             iou25_sum += BATCH_SIZE * iou25
             num_samples += BATCH_SIZE
-            print np.min(corr1), np.max(corr1)
-            print np.min(corr5), np.max(corr5)
+            #print np.min(corr1), np.max(corr1)
+            #print np.min(corr5), np.max(corr5)
 
     assert(num_samples > 0)
     #print '[VALID] Samples considered: %d' % num_samples
@@ -161,9 +161,9 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb)
     for i, ci in enumerate([c1,c2,c3,c4,c5]):
         new_im.paste(ci, ((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD, PAD))
 
-    fnt = ImageFont.truetype('RobotoMono-Regular.ttf', 16)
-    for i, ct in enumerate([con1, con2, con3, con4, con5]):
-        d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), "%.5f" % ct.reshape([1])[0], font=fnt, fill=(255, 0, 0, 255))
+    #fnt = ImageFont.truetype('RobotoMono-Regular.ttf', 16)
+    #for i, ct in enumerate([con1, con2, con3, con4, con5]):
+    #    d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), "%.5f" % ct.reshape([1])[0], font=fnt, fill=(255, 0, 0, 255))
 
     new_im.save(name)
 
@@ -231,7 +231,6 @@ def main():
     validation_iou5s.append(iou5)
     validation_iou25s.append(iou25)
 
-    '''
     # TODO: use QueueRunner to optimize file loading on CPU
     print 'Starting training'
     start = time.time()
@@ -309,7 +308,6 @@ def main():
         'train_iou5s': train_iou5s,
         'train_iou25s': train_iou25s
     })
-    '''
     sess.close()
 
 if __name__ == '__main__':
