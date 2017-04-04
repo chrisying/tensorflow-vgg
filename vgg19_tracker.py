@@ -225,7 +225,7 @@ class Vgg19:
                     self.key_img: key_img,
                     self.search_img: search_img,
                     self.key_bb: key_bb,
-                    self.search_bb, search_bb})
+                    self.search_bb: search_bb})
             self.summary_writer.add_summary(summ, self.iter_num)
         else:
             _, loss, iou1, iou5, iou25  = self.sess.run([
