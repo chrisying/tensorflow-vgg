@@ -186,8 +186,8 @@ class Vgg19:
 
         # Trainers
         # TODO: experiment with LR decay?
-        self.train_finetune = tf.train.AdamOptimizer(1e-5).minimize(self.raw_loss, var_list=self.cnn_var_list)
-        self.train_gate = tf.train.AdamOptimizer(1e-3).minimize(self.gated_loss, var_list=self.gate_var_list)
+        self.train_finetune_op = tf.train.AdamOptimizer(1e-5).minimize(self.raw_loss, var_list=self.cnn_var_list)
+        self.train_gate_op = tf.train.AdamOptimizer(1e-3).minimize(self.gated_loss, var_list=self.gate_var_list)
 
         # Tensorboard summaries
         self.raw_loss_summary = tf.summary.scalar('raw_loss', self.raw_loss)
@@ -222,7 +222,7 @@ class Vgg19:
     def train_finetune(self, key_img, search_img, key_bb, search_bb):
         if self.iter_num % 10 == 0:
             _, loss, iou1, iou5, iou25, summ = self.sess.run([
-                self.train_finetune, self.raw_loss, self.IOU_at_1, self.IOU_at_5, self.IOU_full, self.raw_summary],
+                self.train_finetune_op, self.raw_loss, self.IOU_at_1, self.IOU_at_5, self.IOU_full, self.raw_summary],
                 feed_dict={
                     self.key_img: key_img,
                     self.search_img: search_img,
@@ -231,7 +231,7 @@ class Vgg19:
             self.summary_writer.add_summary(summ, self.iter_num)
         else:
             _, loss, iou1, iou5, iou25  = self.sess.run([
-                self.train_finetune, self.raw_loss, self.IOU_at_1, self.IOU_at_5, self.IOU_full],
+                self.train_finetune_op, self.raw_loss, self.IOU_at_1, self.IOU_at_5, self.IOU_full],
                 feed_dict={
                     self.key_img: key_img,
                     self.search_img: search_img,
@@ -243,7 +243,7 @@ class Vgg19:
         return loss, iou1, iou5, iou25
 
     def train_gate(self):
-        #TODO
+        # TODO
         return
 
     ## Custom layers
@@ -443,7 +443,7 @@ class Vgg19:
         except ValueError:
             with tf.variable_scope(tf.get_variable_scope(), reuse=True):
                 var = tf.get_variable(var_name)
-                print 'Reused variable %s in %s' % (var_name, tf.get_variable_scope().name)
+                print 'Reused Variable %s in %s' % (var_name, tf.get_variable_scope().name)
 
         self.var_dict[(name, idx)] = var
         return var
