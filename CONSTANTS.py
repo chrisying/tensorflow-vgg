@@ -15,6 +15,7 @@ SEARCH_FRAME_SIZE = 256
 BATCH_SIZE = 25
 GAUSSIAN_AMP = 1
 GAUSSIAN_VAR = 10
+LAMBDA = 0.25       # [0.0, 1.0], higher = more weight to computational cost
 
 TRAIN_EPOCHS = 1
 TRAIN_CATS = ['bag',

@@ -249,9 +249,7 @@ class Vgg19:
                     dtype=tf.float32) + 0.0001,
                 elems=corr,
                 dtype=tf.float32)
-        print hist.get_shape()
         entropy = -1 * tf.reduce_sum(hist * tf.log(hist), [1], keep_dims=True)
-        print entropy.get_shape()
 
         # Top 5 peaks (raw)
         peaks, _ = tf.nn.top_k(tf.reshape(corr, [-1, corr_size ** 2]), k=5)     # B x 5
