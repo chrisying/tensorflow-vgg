@@ -174,8 +174,10 @@ class Vgg19:
         self.IOU_at_5 = tf.reduce_mean(self.IOU[:5])
         self.IOU_full = tf.reduce_mean(self.IOU)
 
-        # TODO: add computation cost
-        #self.gated_loss = self.weighted_softmax_loss(ground_truth, self.gated_prediction)
+        # Gated loss + computational loss
+        self.comp_loss = self.conf1 + 2 * self.conf2 + 4 * self.conf3 + 8 * self.conf4 + 16 * self.conf5
+        self.gated_loss = ((1-LAMBDA) * self.weighted_softmax_loss(self.ground_truth, self.gated_prediction)
+                          + LAMBDA * self.comp_loss)
 
         self.data_dict = None
 
@@ -214,8 +216,11 @@ class Vgg19:
                     [1, 1, 1, 1],
                     padding='SAME')
 
-            corr_mean, corr_var = tf.nn.moments(cross_corr, [1,2,3], keep_dims=True)
-            corr_white = (cross_corr - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
+            #corr_mean, corr_var = tf.nn.moments(cross_corr, [1,2,3], keep_dims=True)
+            #corr_white = (cross_corr - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
+            corr_min = tf.reduce_min(cross_corr, [1,2,3], keep_dims=True)
+            corr_max = tf.reduce_max(cross_corr, [1,2,3], keep_dims=True)
+            corr_white = (cross_corr - corr_min) / (corr_max - corr_min)
 
             # NOTE: these are never tuned if we don't fine tune
             #corr_bias = self.get_var(name, [1], 0, name + "_bias")
@@ -236,8 +241,17 @@ class Vgg19:
         kurt = tf.reshape(kurt, [-1, 1])    # B x 1
 
         # Entropy
-        #hist= = tf.map_fn(
-        #        lambda cmap : tf.histogram(tf.reshape(cmap, [corr_size ** 2]), value_range=[
+        hist= = tf.map_fn(
+                lambda cmap : tf.histogram_fixed_width(
+                    tf.reshape(cmap, [corr_size ** 2]),
+                    value_range=[0, 1],
+                    nbins=100,
+                    dtype=tf.float32) + 0.0001,
+                elems=corr,
+                dtype=tf.float32)
+        print hist.get_shape()
+        entropy = -1 * tf.reduce_sum(hist * tf.log(hist), [1], keep_dims=True)
+        print entropy.get_shape()
 
         # Top 5 peaks (raw)
         peaks, _ = tf.nn.top_k(tf.reshape(corr, [-1, corr_size ** 2]), k=5)     # B x 5
@@ -245,7 +259,7 @@ class Vgg19:
         # Top 5 peaks (after NMS)
         # TODO
 
-        return tf.concat([kurt, peaks], axis=1)
+        return tf.concat([kurt, entropy, peaks], axis=1)
 
     def confidence_layer(self, gate, name):
         with tf.variable_scope(name):
