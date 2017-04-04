@@ -77,14 +77,14 @@ def run_validation(vgg):
                 continue
 
             #for i in range(BATCH_SIZE):
-            #    loss, iou1, iou5, iou25 = vgg.sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            #    loss, iou1, iou5, iou25 = vgg.sess.run([vgg.raw_loss, vgg.raw_IOU_at_1, vgg.raw_IOU_at_5, vgg.raw_IOU_full],
             #            feed_dict={vgg.key_img: key,
             #                       vgg.search_img: search[i:i+1, :, :, :],
             #                       vgg.key_bb: key_bb,
             #                       vgg.search_bb: search_bb[i:i+1, :]})
             #    print 'frame %d: %.5f' % (i, loss)
 
-            loss, iou1, iou5, iou25 = vgg.sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            loss, iou1, iou5, iou25 = vgg.sess.run([vgg.raw_loss, vgg.raw_IOU_at_1, vgg.raw_IOU_at_5, vgg.raw_IOU_full],
                     feed_dict={vgg.key_img: key,
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
@@ -242,6 +242,7 @@ def main():
                 continue
 
             loss, iou1, iou5, iou25 = vgg.train_finetune(key, search, key_bb, search_bb)
+            #loss, iou1, iou5, iou25 = vgg.train_gate(key, search, key_bb, search_bb)
 
             #print '[TRAIN] Batch loss %s %s: %.5f' % (train_cat, key_name, loss)
             epoch_loss_sum += BATCH_SIZE * loss

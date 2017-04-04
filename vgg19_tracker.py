@@ -165,24 +165,30 @@ class Vgg19:
         # Prediction and loss
         #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
         self.raw_prediction = self.rcorr5
-        self.gated_prediction = ((self.conf1 * self.rcorr1 +
+        self.soft_prediction = ((self.conf1 * self.rcorr1 +
                                   self.conf2 * self.rcorr2 +
                                   self.conf3 * self.rcorr3 +
                                   self.conf4 * self.rcorr4 +
                                   self.conf5 * self.rcorr5) /
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
+        # TODO: hard_prediction
 
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
+
         self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
-        self.IOU, self.pred_box, self.ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
-        self.IOU_at_1 = self.IOU[0]
-        self.IOU_at_5 = tf.reduce_mean(self.IOU[:5])
-        self.IOU_full = tf.reduce_mean(self.IOU)
+        self.raw_IOU, self.pred_box, self.ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
+        self.raw_IOU_at_1 = self.raw_IOU[0]
+        self.raw_IOU_at_5 = tf.reduce_mean(self.raw_IOU[:5])
+        self.raw_IOU_full = tf.reduce_mean(self.raw_IOU)
 
         # Gated loss + computational loss
         self.comp_loss = self.conf1 + 2 * self.conf2 + 4 * self.conf3 + 8 * self.conf4 + 16 * self.conf5
-        self.gated_loss = ((1-LAMBDA) * self.weighted_softmax_loss(self.ground_truth, self.gated_prediction)
+        self.gated_loss = ((1-LAMBDA) * self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
                           + LAMBDA * self.comp_loss)
+        self.soft_IOU, self.pred_box, self.ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
+        self.soft_IOU_at_1 = self.soft_IOU[0]
+        self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
+        self.soft_IOU_full = tf.reduce_mean(self.soft_IOU)
 
         # Trainers
         # TODO: experiment with LR decay?
@@ -217,12 +223,14 @@ class Vgg19:
         self.data_dict = None
         self.sess.run(tf.global_variables_initializer())
 
-    ## Public methods
+    ## Training methods
+    # WARN: do not mix up running train_finetune and train_gate (iter_num and summaries gets messed up)
 
     def train_finetune(self, key_img, search_img, key_bb, search_bb):
         if self.iter_num % 10 == 0:
             _, loss, iou1, iou5, iou25, summ = self.sess.run([
-                self.train_finetune_op, self.raw_loss, self.IOU_at_1, self.IOU_at_5, self.IOU_full, self.raw_summary],
+                self.train_finetune_op, self.raw_loss, self.raw_IOU_at_1, self.raw_IOU_at_5,
+                self.raw_IOU_full, self.raw_summary],
                 feed_dict={
                     self.key_img: key_img,
                     self.search_img: search_img,
@@ -231,7 +239,7 @@ class Vgg19:
             self.summary_writer.add_summary(summ, self.iter_num)
         else:
             _, loss, iou1, iou5, iou25  = self.sess.run([
-                self.train_finetune_op, self.raw_loss, self.IOU_at_1, self.IOU_at_5, self.IOU_full],
+                self.train_finetune_op, self.raw_loss, self.raw_IOU_at_1, self.raw_IOU_at_5, self.raw_IOU_full],
                 feed_dict={
                     self.key_img: key_img,
                     self.search_img: search_img,
@@ -243,8 +251,28 @@ class Vgg19:
         return loss, iou1, iou5, iou25
 
     def train_gate(self):
-        # TODO
-        return
+        if self.iter_num % 10 == 0:
+            _, loss, iou1, iou5, iou25, summ = self.sess.run([
+                self.train_gate_op, self.raw_loss, self.soft_IOU_at_1, self.soft_IOU_at_5,
+                self.soft_IOU_full, self.gated_summary],
+                feed_dict={
+                    self.key_img: key_img,
+                    self.search_img: search_img,
+                    self.key_bb: key_bb,
+                    self.search_bb: search_bb})
+            self.summary_writer.add_summary(summ, self.iter_num)
+        else:
+            _, loss, iou1, iou5, iou25  = self.sess.run([
+                self.train_gate_op, self.raw_loss, self.soft_IOU_at_1, self.soft_IOU_at_5, self.soft_IOU_full],
+                feed_dict={
+                    self.key_img: key_img,
+                    self.search_img: search_img,
+                    self.key_bb: key_bb,
+                    self.search_bb: search_bb})
+
+        self.iter_num += 1
+
+        return loss, iou1, iou5, iou25
 
     ## Custom layers
 
@@ -285,16 +313,7 @@ class Vgg19:
             #corr_white = (cross_corr - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
             corr_min = tf.reduce_min(cross_corr, [1,2,3], keep_dims=True)
             corr_max = tf.reduce_max(cross_corr, [1,2,3], keep_dims=True)
-            corr_white = (cross_corr - corr_min) / (corr_max - corr_min)
-
-            # NOTE: these are never tuned if we don't fine tune
-            #corr_bias = self.get_var(name, [1], 0, name + "_bias")
-            #self.cnn_var_list.append(corr_bias)
-            #bias = tf.nn.bias_add(corr_white, corr_bias)
-            #output = tf.tanh(bias)
-
-            #corr_mean, corr_var = tf.nn.moments(bias, [1,2,3], keep_dims=True)
-            #corr_norm = (bias - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
+            corr_white = (cross_corr - corr_min) / (corr_max - corr_min + 0.0001)
 
             return corr_white
 
