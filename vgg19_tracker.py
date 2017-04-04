@@ -241,7 +241,7 @@ class Vgg19:
         kurt = tf.reshape(kurt, [-1, 1])    # B x 1
 
         # Entropy
-        hist= = tf.map_fn(
+        hist = tf.map_fn(
                 lambda cmap : tf.histogram_fixed_width(
                     tf.reshape(cmap, [corr_size ** 2]),
                     value_range=[0, 1],
