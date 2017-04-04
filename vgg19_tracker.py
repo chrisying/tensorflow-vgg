@@ -234,7 +234,7 @@ class Vgg19:
                     self.key_img: key_img,
                     self.search_img: search_img,
                     self.key_bb: key_bb,
-                    self.search_bb, search_bb})
+                    self.search_bb: search_bb})
 
         self.iter_num += 1
 
