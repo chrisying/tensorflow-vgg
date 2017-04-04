@@ -59,7 +59,7 @@ def load_batch(category, key_name):
 
     return key_data, search_batch, np.array([w*s, h*s]), search_bb
 
-def run_validation(sess, vgg):
+def run_validation(vgg):
     test_loss_sum = 0.0
     iou1_sum = 0.0
     iou5_sum = 0.0
@@ -77,15 +77,14 @@ def run_validation(sess, vgg):
                 continue
 
             #for i in range(BATCH_SIZE):
-            #    loss, iou1, iou5, iou25 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            #    loss, iou1, iou5, iou25 = vgg.sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
             #            feed_dict={vgg.key_img: key,
             #                       vgg.search_img: search[i:i+1, :, :, :],
             #                       vgg.key_bb: key_bb,
             #                       vgg.search_bb: search_bb[i:i+1, :]})
             #    print 'frame %d: %.5f' % (i, loss)
 
-            #corr1, corr5, loss, iou1, iou5, iou25 = sess.run([vgg.corr1, vgg.corr5, vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
-            loss, iou1, iou5, iou25 = sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
+            loss, iou1, iou5, iou25 = vgg.sess.run([vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
                     feed_dict={vgg.key_img: key,
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
@@ -111,9 +110,9 @@ def convert_corr_map(corr_map):
     #im = im.resize((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
     return im
 
-def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb):
+def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
-    cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = sess.run(
+    cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.sess.run(
             [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
              vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5,
              vgg.pred_box, vgg.ground_box],
@@ -167,7 +166,7 @@ def visualize_corr_maps(sess, vgg, name, key_img, search_img, key_bb, search_bb)
 
     new_im.save(name)
 
-def diagnostic_corr_maps(sess, vgg, name):
+def diagnostic_corr_maps(vgg, name):
     debug_key, debug_search, debug_key_bb, debug_search_bb = load_batch('bolt2', 'key-00000071')
     assert(debug_key is not None)
     debug_search = debug_search[15:16,:,:,:]
@@ -175,11 +174,11 @@ def diagnostic_corr_maps(sess, vgg, name):
     #debug_search = debug_search[0:1,:,:,:]
     #debug_search_bb = debug_search_bb[0:1,:]
 
-    gt = sess.run(vgg.ground_truth, feed_dict={vgg.search_bb: debug_search_bb})
+    gt = vgg.sess.run(vgg.ground_truth, feed_dict={vgg.search_bb: debug_search_bb})
     img = Image.fromarray((gt[0,:,:,0] * 255).astype(np.uint8))
     img.save('gt.png')
 
-    visualize_corr_maps(sess, vgg, 'bolt_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
+    visualize_corr_maps(vgg, 'bolt_' + name, debug_key, debug_search, debug_key_bb, debug_search_bb)
 
 def main():
 
@@ -187,31 +186,18 @@ def main():
     if len(sys.argv) == 2:
         weights_file = sys.argv[1]
 
-    sess = tf.Session()
-
     vgg = vgg19.Vgg19(weights_file)
     vgg.build()
 
     # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
     print vgg.get_var_count()
 
-    #global_step = tf.Variable(0, trainable=False)
-    #starter_learning_rate = 1e-5
-    #decay_steps = 10000
-    #decay_rate = 0.95
-
-    #learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, decay_steps, decay_rate, staircase=True)
-    #train_finetune = tf.train.AdamOptimizer(learning_rate).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list, global_step=global_step)
-    train_finetune = tf.train.AdamOptimizer(1e-6).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
-    train_gate = tf.train.AdamOptimizer(1e-6).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
-    sess.run(tf.global_variables_initializer())
-
     print 'Trainable variables (finetune):'
     print map(lambda x:x.name, vgg.cnn_var_list)
     print 'Trainable variables (gate):'
     print map(lambda x:x.name, vgg.gate_var_list)
 
-    diagnostic_corr_maps(sess, vgg, 'initial.png')
+    diagnostic_corr_maps(vgg, 'initial.png')
 
     validation_losses = []
     validation_iou1s = []
@@ -223,7 +209,7 @@ def main():
     train_iou5s = []
     train_iou25s = []
 
-    valid_loss, iou1, iou5, iou25 = run_validation(sess, vgg)
+    valid_loss, iou1, iou5, iou25 = run_validation(vgg)
     print '[VALID] Initial validation loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@25: %.5f' % (valid_loss, iou1, iou5, iou25)
     validation_losses.append(valid_loss)
     validation_iou1s.append(iou1)
@@ -256,13 +242,7 @@ def main():
             if key is None:
                 continue
 
-            #_, loss = sess.run([train_finetune, vgg.raw_loss],
-            _, loss, iou1, iou5, iou25 = sess.run([train_finetune, vgg.raw_loss, vgg.IOU_at_1, vgg.IOU_at_5, vgg.IOU_full],
-                    feed_dict={
-                        vgg.key_img: key,
-                        vgg.search_img: search,
-                        vgg.key_bb: key_bb,
-                        vgg.search_bb: search_bb})
+            loss, iou1, iou5, iou25 = vgg.train_finetune(key, search, key_bb, search_bb)
 
             #print '[TRAIN] Batch loss %s %s: %.5f' % (train_cat, key_name, loss)
             epoch_loss_sum += BATCH_SIZE * loss
@@ -281,7 +261,7 @@ def main():
         train_iou5s.append(epoch_iou5)
         train_iou25s.append(epoch_iou25)
 
-        valid_loss, iou1, iou5, iou25 = run_validation(sess, vgg)
+        valid_loss, iou1, iou5, iou25 = run_validation(vgg)
         print '[VALID] Epoch %d, loss: %.5f, IOU@1: %.5f, IOU@5: %.5f, IOU@25: %.5f' % (epoch+1, valid_loss, iou1, iou5, iou25)
         validation_losses.append(valid_loss)
         validation_iou1s.append(iou1)
@@ -289,14 +269,13 @@ def main():
         validation_iou25s.append(iou25)
 
         # checkpointing
-        diagnostic_corr_maps(sess, vgg, 'epoch_%s.png' % str(epoch+1).zfill(3))
-        #vgg.save_npy(sess, './trained_model_epoch_%d_%s.npy' % (epoch+1, str(int(time.time()))))
+        diagnostic_corr_maps(vgg, 'epoch_%s.png' % str(epoch+1).zfill(3))
 
     dur = time.time() - start
     print 'Training completed in %d seconds' % dur
 
     # save model
-    vgg.save_npy(sess, './trained_model_%s.npy' % str(int(time.time())))
+    vgg.save_npy('./trained_model_%s.npy' % str(int(time.time())))
     np.save('training_metrics.npy', {
         'validation_losses': validation_losses,
         'validation_iou1s': validation_iou1s,
@@ -307,7 +286,7 @@ def main():
         'train_iou5s': train_iou5s,
         'train_iou25s': train_iou25s
     })
-    sess.close()
+    vgg.sess.close()
 
 if __name__ == '__main__':
     main()

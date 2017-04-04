@@ -24,6 +24,7 @@ class Vgg19:
         self.var_dict = {}
         self.cnn_var_list = []
         self.gate_var_list = []
+        self.iter_num = 0
 
     def build(self):
         """
@@ -34,6 +35,8 @@ class Vgg19:
         key_bb: [2] (width, height) after scale conversion
         search_bb: [batch, 4] (x, y, w, h) after scale conversion
         """
+
+        self.sess = tf.Session()
 
         # Inputs
         self.key_img = tf.placeholder(tf.float32, [1, KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3])
@@ -179,7 +182,67 @@ class Vgg19:
         self.gated_loss = ((1-LAMBDA) * self.weighted_softmax_loss(self.ground_truth, self.gated_prediction)
                           + LAMBDA * self.comp_loss)
 
+        # Trainers
+        # TODO: experiment with LR decay?
+        self.train_finetune = tf.train.AdamOptimizer(1e-6).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
+        self.train_gate = tf.train.AdamOptimizer(1e-3).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
+
+        # Tensorboard summaries
+        self.raw_loss_summary = tf.summary.scalar('raw_loss', self.raw_loss)
+        self.comp_loss_summary = tf.summary.scalar('comp_loss', self.comp_loss)
+        self.gated_loss_summary = tf.summary.scalar('gated_loss', self.gated_loss)
+
+        self.xcorr1_summary = tf.summary.histogram('xcorr1', self.rcorr1)
+        self.xcorr2_summary = tf.summary.histogram('xcorr2', self.rcorr2)
+        self.xcorr3_summary = tf.summary.histogram('xcorr3', self.rcorr3)
+        self.xcorr4_summary = tf.summary.histogram('xcorr4', self.rcorr4)
+        self.xcorr5_summary = tf.summary.histogram('xcorr5', self.rcorr5)
+
+        self.conf1_summary = tf.summary.histogram('conf1', self.conf1)
+        self.conf2_summary = tf.summary.histogram('conf2', self.conf1)
+        self.conf3_summary = tf.summary.histogram('conf3', self.conf1)
+        self.conf4_summary = tf.summary.histogram('conf4', self.conf1)
+        self.conf5_summary = tf.summary.histogram('conf5', self.conf1)
+
+        self.raw_summary = tf.summary.merge([
+            self.raw_loss_summary, self.xcorr1_summary, self.xcorr2_summary, self.xcorr3_summary,
+            self.xcorr4_summary, self.xcorr5_summary])
+        self.gated_summary = tf.summary.merge([
+            self.comp_loss_summary, self.gated_loss_summary, self.conf1_summary, self.conf2_summary,
+            self.conf3_summary, self.conf4_summary, self.conf5_summary])
+        self.summary_writer = tf.summary.FileWriter('logs/')
+
         self.data_dict = None
+        self.sess.run(tf.global_variables_initializer())
+
+    ## Public methods
+
+    def train_finetune(self, key_img, search_img, key_bb, search_bb):
+        if self.iter_num % 10 == 0:
+            _, loss, iou1, iou5, iou25, summ = self.sess.run([
+                self.train_finetune, self.raw_loss, self.IOU_at_1, self.IOU_at_5, self.IOU_full, self.raw_summary],
+                feed_dict={
+                    self.key_img: key_img,
+                    self.search_img: search_img,
+                    self.key_bb: key_bb,
+                    self.search_bb, search_bb})
+            self.summary_writer.add_summary(summ, self.iter_num)
+        else:
+            _, loss, iou1, iou5, iou25  = self.sess.run([
+                self.train_finetune, self.raw_loss, self.IOU_at_1, self.IOU_at_5, self.IOU_full],
+                feed_dict={
+                    self.key_img: key_img,
+                    self.search_img: search_img,
+                    self.key_bb: key_bb,
+                    self.search_bb, search_bb})
+
+        self.iter_num += 1
+
+        return loss, iou1, iou5, iou25
+
+    def train_gate(self):
+        #TODO
+        return
 
     ## Custom layers
 
@@ -383,13 +446,11 @@ class Vgg19:
         self.var_dict[(name, idx)] = var
         return var
 
-    def save_npy(self, sess, npy_path="./vgg19-save.npy"):
-        assert isinstance(sess, tf.Session)
-
+    def save_npy(self, npy_path="./vgg19-save.npy"):
         data_dict = {}
 
         for (name, idx), var in self.var_dict.items():
-            var_out = sess.run(var)
+            var_out = self.sess.run(var)
             if not data_dict.has_key(name):
                 data_dict[name] = {}
             data_dict[name][idx] = var_out
