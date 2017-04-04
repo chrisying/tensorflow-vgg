@@ -242,9 +242,9 @@ class Vgg19:
 
         # Entropy
         hist = tf.map_fn(
-                lambda cmap : tf.histogram_fixed_width(
+                lambda cmap : tf.histogram_fixed_width(     # cmap: W x H x 1
                     tf.reshape(cmap, [corr_size ** 2]),
-                    value_range=[0, 1],
+                    value_range=[0.0, 1.0],
                     nbins=100,
                     dtype=tf.float32) + 0.0001,
                 elems=corr,
