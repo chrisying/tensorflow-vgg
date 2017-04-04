@@ -187,7 +187,6 @@ def main():
         weights_file = sys.argv[1]
 
     vgg = vgg19.Vgg19(weights_file)
-    vgg.build()
 
     # print number of variables used: 143667240 variables, i.e. ideal size = 548MB
     print vgg.get_var_count()

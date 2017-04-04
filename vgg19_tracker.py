@@ -26,6 +26,8 @@ class Vgg19:
         self.gate_var_list = []
         self.iter_num = 0
 
+        self.build()
+
     def build(self):
         """
         load variable from npy to build the VGG
@@ -184,8 +186,8 @@ class Vgg19:
 
         # Trainers
         # TODO: experiment with LR decay?
-        self.train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
-        self.train_gate = tf.train.AdamOptimizer(1e-3).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
+        self.train_finetune = tf.train.AdamOptimizer(1e-5).minimize(self.raw_loss, var_list=self.cnn_var_list)
+        self.train_gate = tf.train.AdamOptimizer(1e-3).minimize(self.gated_loss, var_list=self.gate_var_list)
 
         # Tensorboard summaries
         self.raw_loss_summary = tf.summary.scalar('raw_loss', self.raw_loss)
