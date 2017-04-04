@@ -184,7 +184,7 @@ class Vgg19:
 
         # Trainers
         # TODO: experiment with LR decay?
-        self.train_finetune = tf.train.AdamOptimizer(1e-6).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
+        self.train_finetune = tf.train.AdamOptimizer(1e-5).minimize(vgg.raw_loss, var_list=vgg.cnn_var_list)
         self.train_gate = tf.train.AdamOptimizer(1e-3).minimize(vgg.gated_loss, var_list=vgg.gate_var_list)
 
         # Tensorboard summaries
