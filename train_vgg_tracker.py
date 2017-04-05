@@ -86,6 +86,8 @@ def run_validation(vgg):
 
             #loss, iou1, iou5, iou25 = vgg.validation_raw(key, search, key_bb, search_bb)
             loss, iou1, iou5, iou25 = vgg.validation_gated(key, search, key_bb, search_bb)
+            print type(loss), type(iou1), type(iou5), type(iou25)
+            raw_input()
 
             test_loss_sum += BATCH_SIZE * loss
             iou1_sum += BATCH_SIZE * iou1
