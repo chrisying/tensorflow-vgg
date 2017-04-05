@@ -149,11 +149,11 @@ class Vgg19:
 
         # Gating feature vectors from pre-resized feature maps
         # TODO: don't hardcode 2**4
-        self.gate1 = self.extract_corr_features(self.corr1, SEARCH_FRAME_SIZE / 2 ** 4)
-        self.gate2 = self.extract_corr_features(self.corr2, SEARCH_FRAME_SIZE / 2 ** 4)
-        self.gate3 = self.extract_corr_features(self.corr3, SEARCH_FRAME_SIZE / 2 ** 4)
-        self.gate4 = self.extract_corr_features(self.corr4, SEARCH_FRAME_SIZE / 2 ** 4)
-        self.gate5 = self.extract_corr_features(self.corr5, SEARCH_FRAME_SIZE / 2 ** 4)
+        self.gate1 = self.extract_corr_features(self.corr1, SEARCH_FRAME_SIZE / 2 ** 4, 1)
+        self.gate2 = self.extract_corr_features(self.corr2, SEARCH_FRAME_SIZE / 2 ** 4, 2)
+        self.gate3 = self.extract_corr_features(self.corr3, SEARCH_FRAME_SIZE / 2 ** 4, 3)
+        self.gate4 = self.extract_corr_features(self.corr4, SEARCH_FRAME_SIZE / 2 ** 4, 4)
+        self.gate5 = self.extract_corr_features(self.corr5, SEARCH_FRAME_SIZE / 2 ** 4, 5)
 
         # Confidence of gates
         self.conf1 = self.confidence_layer(self.gate1, 'conf1')
@@ -378,7 +378,7 @@ class Vgg19:
             return corr_white
 
     # TODO: add more features
-    def extract_corr_features(self, corr, corr_size):
+    def extract_corr_features(self, corr, corr_size, depth):
         # Kurtosis
         corr_mean, corr_var = tf.nn.moments(corr, [1,2,3])
         kurt = tf.pow(corr_mean, tf.constant(4.0)) / tf.pow(corr_var, tf.constant(2.0))
@@ -393,7 +393,10 @@ class Vgg19:
                     dtype=tf.float32) + 0.0001,
                 elems=corr,
                 dtype=tf.float32)
-        entropy = -1 * tf.reduce_sum(hist * tf.log(hist), [1], keep_dims=True)
+        entropy = -1 * tf.reduce_sum(hist * tf.log(hist), [1], keep_dims=True)  # B x 1
+
+        # Depth
+        dep = tf.ones_like(kurt, dtype=tf.float32) * ((depth - 1.0) / 4.0)  # {0.0, 0.25, 0.5, 0.75, 1.0}
 
         # Top 5 peaks (raw)
         peaks, _ = tf.nn.top_k(tf.reshape(corr, [-1, corr_size ** 2]), k=5)     # B x 5
@@ -401,7 +404,7 @@ class Vgg19:
         # Top 5 peaks (after NMS)
         # TODO
 
-        return tf.concat([kurt, entropy, peaks], axis=1)
+        return tf.concat([kurt, entropy, dep, peaks], axis=1)
 
     def confidence_layer(self, gate, name):
         with tf.variable_scope(name):
