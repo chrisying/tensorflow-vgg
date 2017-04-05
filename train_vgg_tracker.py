@@ -14,8 +14,9 @@ import matplotlib.cm as cm
 import vgg19_tracker as vgg19
 from CONSTANTS import *
 
-# For resolving some floating point precision errors
-EPSILON = 1e-5
+# Uncomment the MODE to run (finetune = train VGG weights, gating = train gate vars)
+#MODE = 'finetune'
+MODE = 'gating'
 
 def load_batch(category, key_name):
     data_dir = os.path.join(PROCESSED_DIR, category, key_name)
@@ -50,13 +51,6 @@ def load_batch(category, key_name):
             search_bb[s_idx, 2] = s_width * s
             search_bb[s_idx, 3] = s_height * s
 
-            # Add circle of radium TRUTH_RADIUS of +1 to ground truth using mask
-            #offset_x_full, offset_y_full = offset_x * s, offset_y * s
-            #true_center_x, true_center_y = SEARCH_FRAME_SIZE / 2 + offset_x_full, SEARCH_FRAME_SIZE /2 + offset_y_full
-            #og_y, og_x = np.ogrid[-true_center_y:SEARCH_FRAME_SIZE-true_center_y-EPSILON, -true_center_x:SEARCH_FRAME_SIZE-true_center_x-EPSILON]
-            #mask = og_x * og_x + og_y * og_y <= TRUTH_RADIUS**2
-            #ground_truth[s_idx, :, :, :][mask] = 1
-
     return key_data, search_batch, np.array([w*s, h*s]), search_bb
 
 def run_validation(vgg):
@@ -84,16 +78,17 @@ def run_validation(vgg):
             #                       vgg.search_bb: search_bb[i:i+1, :]})
             #    print 'frame %d: %.5f' % (i, loss)
 
-            #loss, iou1, iou5, iou25 = vgg.validation_raw(key, search, key_bb, search_bb)
-            loss, iou1, iou5, iou25 = vgg.validation_gated(key, search, key_bb, search_bb)
+            if MODE == 'finetune':
+                loss, iou1, iou5, iou25 = vgg.validation_raw(key, search, key_bb, search_bb)
+            else:
+                assert(MODE == 'gating')
+                loss, iou1, iou5, iou25 = vgg.validation_gated(key, search, key_bb, search_bb)
 
             test_loss_sum += BATCH_SIZE * loss
             iou1_sum += BATCH_SIZE * iou1
             iou5_sum += BATCH_SIZE * iou5
             iou25_sum += BATCH_SIZE * iou25
             num_samples += BATCH_SIZE
-            #print np.min(corr1), np.max(corr1)
-            #print np.min(corr5), np.max(corr5)
 
     assert(num_samples > 0)
     #print '[VALID] Samples considered: %d' % num_samples
@@ -109,10 +104,13 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
-    #cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.diagnostic_raw(
-    #        key_img, search_img, key_bb, search_bb)
-    cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.diagnostic_gated(
-            key_img, search_img, key_bb, search_bb)
+    if MODE == 'finetune':
+        cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.diagnostic_raw(
+                key_img, search_img, key_bb, search_bb)
+    else:
+        assert(MODE == 'gating')
+        cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.diagnostic_gated(
+                key_img, search_img, key_bb, search_bb)
 
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
@@ -143,9 +141,10 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     for i, ci in enumerate([c1,c2,c3,c4,c5]):
         new_im.paste(ci, ((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD, PAD))
 
-    fnt = ImageFont.truetype('RobotoMono-Regular.ttf', 16)
-    for i, ct in enumerate([con1, con2, con3, con4, con5]):
-        d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), "%.5f" % ct.reshape([1])[0], font=fnt, fill=(255, 0, 0, 255))
+    if MODE == 'gating':
+        fnt = ImageFont.truetype('RobotoMono-Regular.ttf', 16)
+        for i, ct in enumerate([con1, con2, con3, con4, con5]):
+            d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), "%.5f" % ct.reshape([1])[0], font=fnt, fill=(255, 0, 0, 255))
 
     new_im.save(name)
 
@@ -224,8 +223,11 @@ def main():
             if key is None:
                 continue
 
-            #loss, iou1, iou5, iou25 = vgg.train_finetune(key, search, key_bb, search_bb)
-            loss, iou1, iou5, iou25 = vgg.train_gate(key, search, key_bb, search_bb)
+            if MODE == 'finetune':
+                loss, iou1, iou5, iou25 = vgg.train_finetune(key, search, key_bb, search_bb)
+            else:
+                assert(MODE == 'gating')
+                loss, iou1, iou5, iou25 = vgg.train_gate(key, search, key_bb, search_bb)
 
             #print '[TRAIN] Batch loss %s %s: %.5f' % (train_cat, key_name, loss)
             epoch_loss_sum += BATCH_SIZE * loss

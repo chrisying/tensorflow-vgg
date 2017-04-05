@@ -188,9 +188,14 @@ class Vgg19:
         self.raw_IOU_full = tf.reduce_mean(self.raw_IOU)
 
         # Gated loss + computational loss
-        self.comp_loss = tf.reduce_mean(self.conf1 + 2 * self.conf2 + 4 * self.conf3 + 8 * self.conf4 + 16 * self.conf5)
-        self.gated_loss = ((1-LAMBDA) * self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
-                          + LAMBDA * self.comp_loss)
+        self.comp_loss = tf.reduce_mean(
+                (COMP_COST_FACTOR ** 0) * self.conf1 +
+                (COMP_COST_FACTOR ** 1) * self.conf2 +
+                (COMP_COST_FACTOR ** 2) * self.conf3 +
+                (COMP_COST_FACTOR ** 3) * self.conf4 +
+                (COMP_COST_FACTOR ** 4) * self.conf5)
+        self.soft_loss = self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
+        self.gated_loss = (1.0-LAMBDA) * self.soft_loss + LAMBDA * self.comp_loss
         self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
         self.soft_IOU_at_1 = self.soft_IOU[0]
         self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
@@ -198,12 +203,13 @@ class Vgg19:
 
         # Trainers
         # TODO: experiment with LR decay?
-        self.train_finetune_op = tf.train.AdamOptimizer(1e-7).minimize(self.raw_loss, var_list=self.cnn_var_list)
-        self.train_gate_op = tf.train.AdamOptimizer(1e-3).minimize(self.gated_loss, var_list=self.gate_var_list)
+        self.train_finetune_op = tf.train.AdamOptimizer(FINETUNE_LR).minimize(self.raw_loss, var_list=self.cnn_var_list)
+        self.train_gate_op = tf.train.AdamOptimizer(GATE_LR).minimize(self.gated_loss, var_list=self.gate_var_list)
 
         # Tensorboard summaries
         self.raw_loss_summary = tf.summary.scalar('raw_loss', self.raw_loss)
         self.comp_loss_summary = tf.summary.scalar('comp_loss', self.comp_loss)
+        self.soft_loss_summary = tf.summary.scalaer('soft_loss', self.soft_loss)
         self.gated_loss_summary = tf.summary.scalar('gated_loss', self.gated_loss)
 
         self.xcorr1_summary = tf.summary.histogram('xcorr1', self.rcorr1)
@@ -222,8 +228,8 @@ class Vgg19:
             self.raw_loss_summary, self.xcorr1_summary, self.xcorr2_summary, self.xcorr3_summary,
             self.xcorr4_summary, self.xcorr5_summary])
         self.gated_summary = tf.summary.merge([
-            self.comp_loss_summary, self.gated_loss_summary, self.conf1_summary, self.conf2_summary,
-            self.conf3_summary, self.conf4_summary, self.conf5_summary])
+            self.comp_loss_summary, self.soft_loss, self.gated_loss_summary, self.conf1_summary,
+            self.conf2_summary, self.conf3_summary, self.conf4_summary, self.conf5_summary])
         self.summary_writer = tf.summary.FileWriter('logs/')
 
         self.data_dict = None
@@ -301,6 +307,7 @@ class Vgg19:
         return loss, iou1, iou5, iou25
 
     def diagnostic_raw(self, key_img, search_img, key_bb, search_bb):
+        assert(search_img.shape[0] == 1)
         cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = self.sess.run(
                 [self.rcorr1, self.rcorr2, self.rcorr3, self.rcorr4, self.rcorr5,
                  self.conf1, self.conf2, self.conf3, self.conf4, self.conf5,
@@ -314,6 +321,7 @@ class Vgg19:
         return cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box
 
     def diagnostic_gated(self, key_img, search_img, key_bb, search_bb):
+        assert(search_img.shape[0] == 1)
         cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = self.sess.run(
                 [self.rcorr1, self.rcorr2, self.rcorr3, self.rcorr4, self.rcorr5,
                  self.conf1, self.conf2, self.conf3, self.conf4, self.conf5,

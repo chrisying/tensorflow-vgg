@@ -16,6 +16,9 @@ BATCH_SIZE = 25
 GAUSSIAN_AMP = 1
 GAUSSIAN_VAR = 20
 LAMBDA = 0.25       # [0.0, 1.0], higher = more weight to computational cost
+FINETUNE_LR = 1e-7
+GATE_LR = 1e-3
+COMP_COST_FACTOR = 2.0  # higher = more penalty to deeper computation
 
 TRAIN_EPOCHS = 1
 TRAIN_CATS = ['bag',
