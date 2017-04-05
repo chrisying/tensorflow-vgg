@@ -165,13 +165,18 @@ class Vgg19:
         # Prediction and loss
         #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
         self.raw_prediction = self.rcorr5
+
         self.soft_prediction = ((self.conf1 * self.rcorr1 +
                                   self.conf2 * self.rcorr2 +
                                   self.conf3 * self.rcorr3 +
                                   self.conf4 * self.rcorr4 +
                                   self.conf5 * self.rcorr5) /
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
-        # TODO: hard_prediction
+
+        self.hard_prediction = tf.cond(self.conf1 > 0.5, self.rcorr1,
+                tf.cond(self.conf2 > 0.5, self.rcorr2,
+                    tf.cond(self.conf3 > 0.5, self.rcorr3,
+                        tf.cond(self.conf4 > 0.5, self.rcorr4, self.rcorr5))))
 
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
 
@@ -192,7 +197,7 @@ class Vgg19:
 
         # Trainers
         # TODO: experiment with LR decay?
-        self.train_finetune_op = tf.train.AdamOptimizer(1e-5).minimize(self.raw_loss, var_list=self.cnn_var_list)
+        self.train_finetune_op = tf.train.AdamOptimizer(1e-6).minimize(self.raw_loss, var_list=self.cnn_var_list)
         self.train_gate_op = tf.train.AdamOptimizer(1e-3).minimize(self.gated_loss, var_list=self.gate_var_list)
 
         # Tensorboard summaries
