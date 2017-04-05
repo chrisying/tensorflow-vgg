@@ -132,12 +132,12 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     ds = ImageDraw.Draw(c5)
     ds.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
     offset = np.argmax(np.reshape(cm5, [1, 256 * 256]), axis=1)
-    offset_x = np.cast(offset % 256, np.float32)
-    offset_y = np.cast(np.floor_divide(offset, 256), np.float32)
+    offset_x = (offset % 256).astype(np.float32)
+    offset_y = np.floor_divide(offset, 256).astype(np.float32)
     print offset_x, offset_y
     ds.rectangle([
-        offset_x - 10, offset_y - 10,
-        offset_x + 10, offset-y + 10], outline='blue')
+        offset_x - 10 + 8, offset_y - 10 + 8,
+        offset_x + 10 + 8, offset-y + 10 + 8], outline='blue')
 
     PAD = 2
 
