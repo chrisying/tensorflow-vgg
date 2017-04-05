@@ -128,6 +128,10 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     c4 = convert_corr_map(cm4)
     c5 = convert_corr_map(cm5)
 
+    # TODO: delete this
+    ds = ImageDraw.Draw(c5)
+    ds.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
+
     PAD = 2
 
     new_im = Image.new('RGB', ((SEARCH_FRAME_SIZE+2*PAD) * 7, (SEARCH_FRAME_SIZE+2*PAD)), (128,128,128))

@@ -197,7 +197,7 @@ class Vgg19:
 
         # Trainers
         # TODO: experiment with LR decay?
-        self.train_finetune_op = tf.train.AdamOptimizer(1e-6).minimize(self.raw_loss, var_list=self.cnn_var_list)
+        self.train_finetune_op = tf.train.AdamOptimizer(1e-7).minimize(self.raw_loss, var_list=self.cnn_var_list)
         self.train_gate_op = tf.train.AdamOptimizer(1e-3).minimize(self.gated_loss, var_list=self.gate_var_list)
 
         # Tensorboard summaries
@@ -394,12 +394,13 @@ class Vgg19:
         offset = tf.argmax(tf.reshape(prediction, [-1, shape[1] * shape[2]]), axis=1)
         offset_x = tf.cast(offset % SEARCH_FRAME_SIZE, tf.float32)
         offset_y = tf.cast(tf.floordiv(offset, SEARCH_FRAME_SIZE), tf.float32)
+        pred_block_size = 2 ** 4    # 256 / 16, centers pred box on max block
 
         # top left + bottom right coords for prediction
-        boxA_x1 = offset_x - key_bb[0] / 2
-        boxA_y1 = offset_y - key_bb[1] / 2
-        boxA_x2 = offset_x + key_bb[0] / 2
-        boxA_y2 = offset_y + key_bb[1] / 2
+        boxA_x1 = offset_x - key_bb[0] / 2 + pred_block_size / 2
+        boxA_y1 = offset_y - key_bb[1] / 2 + pred_block_size / 2
+        boxA_x2 = offset_x + key_bb[0] / 2 + pred_block_size / 2
+        boxA_y2 = offset_y + key_bb[1] / 2 + pred_block_size / 2
 
         # top left + bottom right coords for ground truth
         boxB_x1 = search_bb[:, 0] - search_bb[:, 2] / 2 + SEARCH_FRAME_SIZE / 2
