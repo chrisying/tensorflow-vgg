@@ -188,7 +188,7 @@ class Vgg19:
         self.raw_IOU_full = tf.reduce_mean(self.raw_IOU)
 
         # Gated loss + computational loss
-        self.comp_loss = self.conf1 + 2 * self.conf2 + 4 * self.conf3 + 8 * self.conf4 + 16 * self.conf5
+        self.comp_loss = tf.reduce_mean(self.conf1 + 2 * self.conf2 + 4 * self.conf3 + 8 * self.conf4 + 16 * self.conf5)
         self.gated_loss = ((1-LAMBDA) * self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
                           + LAMBDA * self.comp_loss)
         self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
