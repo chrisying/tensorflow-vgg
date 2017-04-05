@@ -398,10 +398,10 @@ class Vgg19:
         pred_block_size = 2 ** 4    # 256 / 16, centers pred box on max block
 
         # top left + bottom right coords for prediction
-        boxA_x1 = offset_x - key_bb[0] / 2 + pred_block_size / 2
-        boxA_y1 = offset_y - key_bb[1] / 2 + pred_block_size / 2
-        boxA_x2 = offset_x + key_bb[0] / 2 + pred_block_size / 2
-        boxA_y2 = offset_y + key_bb[1] / 2 + pred_block_size / 2
+        boxA_x1 = offset_x - key_bb[2] / 2 + pred_block_size / 2
+        boxA_y1 = offset_y - key_bb[3] / 2 + pred_block_size / 2
+        boxA_x2 = offset_x + key_bb[2] / 2 + pred_block_size / 2
+        boxA_y2 = offset_y + key_bb[3] / 2 + pred_block_size / 2
 
         # top left + bottom right coords for ground truth
         boxB_x1 = search_bb[:, 0] - search_bb[:, 2] / 2 + SEARCH_FRAME_SIZE / 2
