@@ -182,7 +182,7 @@ class Vgg19:
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
 
         self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
-        self.raw_IOU, self.pred_box, self.ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
+        self.raw_IOU, self.raw_pred_box, self.raw_ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
         self.raw_IOU_at_1 = self.raw_IOU[0]
         self.raw_IOU_at_5 = tf.reduce_mean(self.raw_IOU[:5])
         self.raw_IOU_full = tf.reduce_mean(self.raw_IOU)
@@ -191,10 +191,10 @@ class Vgg19:
         self.comp_loss = self.conf1 + 2 * self.conf2 + 4 * self.conf3 + 8 * self.conf4 + 16 * self.conf5
         self.gated_loss = ((1-LAMBDA) * self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
                           + LAMBDA * self.comp_loss)
-        #self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
-        #self.soft_IOU_at_1 = self.soft_IOU[0]
-        #self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
-        #self.soft_IOU_full = tf.reduce_mean(self.soft_IOU)
+        self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
+        self.soft_IOU_at_1 = self.soft_IOU[0]
+        self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
+        self.soft_IOU_full = tf.reduce_mean(self.soft_IOU)
 
         # Trainers
         # TODO: experiment with LR decay?
@@ -259,7 +259,7 @@ class Vgg19:
     def train_gate(self):
         if self.iter_num % 10 == 0:
             _, loss, iou1, iou5, iou25, summ = self.sess.run([
-                self.train_gate_op, self.raw_loss, self.soft_IOU_at_1, self.soft_IOU_at_5,
+                self.train_gate_op, self.gated_loss, self.soft_IOU_at_1, self.soft_IOU_at_5,
                 self.soft_IOU_full, self.gated_summary],
                 feed_dict={
                     self.key_img: key_img,
@@ -269,7 +269,7 @@ class Vgg19:
             self.summary_writer.add_summary(summ, self.iter_num)
         else:
             _, loss, iou1, iou5, iou25  = self.sess.run([
-                self.train_gate_op, self.raw_loss, self.soft_IOU_at_1, self.soft_IOU_at_5, self.soft_IOU_full],
+                self.train_gate_op, self.gated_loss, self.soft_IOU_at_1, self.soft_IOU_at_5, self.soft_IOU_full],
                 feed_dict={
                     self.key_img: key_img,
                     self.search_img: search_img,
@@ -279,6 +279,52 @@ class Vgg19:
         self.iter_num += 1
 
         return loss, iou1, iou5, iou25
+
+    def validation_raw(self, key_img, search_img, key_bb, search_bb):
+        loss, iou1, iou5, iou25  = self.sess.run([
+            self.raw_loss, self.raw_IOU_at_1, self.raw_IOU_at_5, self.raw_IOU_full],
+            feed_dict={
+                self.key_img: key_img,
+                self.search_img: search_img,
+                self.key_bb: key_bb,
+                self.search_bb: search_bb})
+        return loss, iou1, iou5, iou25
+
+    def validation_gated(self, key_img, search_img, key_bb, search_bb):
+        loss, iou1, iou5, iou25  = self.sess.run([
+            self.gated_loss, self.soft_IOU_at_1, self.soft_IOU_at_5, self.soft_IOU_full],
+            feed_dict={
+                self.key_img: key_img,
+                self.search_img: search_img,
+                self.key_bb: key_bb,
+                self.search_bb: search_bb})
+        return loss, iou1, iou5, iou25
+
+    def diagnostic_raw(self, key_img, search_img, key_bb, search_bb):
+        cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = self.sess.run(
+                [self.rcorr1, self.rcorr2, self.rcorr3, self.rcorr4, self.rcorr5,
+                 self.conf1, self.conf2, self.conf3, self.conf4, self.conf5,
+                 self.raw_pred_box, self.raw_ground_box],
+                feed_dict={
+                    self.key_img: key_img,
+                    self.search_img: search_img,
+                    self.key_bb: key_bb,
+                    self.search_bb: search_bb})
+
+        return cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box
+
+    def diagnostic_gated(self, key_img, search_img, key_bb, search_bb):
+        cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = self.sess.run(
+                [self.rcorr1, self.rcorr2, self.rcorr3, self.rcorr4, self.rcorr5,
+                 self.conf1, self.conf2, self.conf3, self.conf4, self.conf5,
+                 self.soft_pred_box, self.soft_ground_box],
+                feed_dict={
+                    self.key_img: key_img,
+                    self.search_img: search_img,
+                    self.key_bb: key_bb,
+                    self.search_bb: search_bb})
+
+        return cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box
 
     ## Custom layers
 

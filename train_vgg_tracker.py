@@ -84,11 +84,8 @@ def run_validation(vgg):
             #                       vgg.search_bb: search_bb[i:i+1, :]})
             #    print 'frame %d: %.5f' % (i, loss)
 
-            loss, iou1, iou5, iou25 = vgg.sess.run([vgg.raw_loss, vgg.raw_IOU_at_1, vgg.raw_IOU_at_5, vgg.raw_IOU_full],
-                    feed_dict={vgg.key_img: key,
-                               vgg.search_img: search,
-                               vgg.key_bb: key_bb,
-                               vgg.search_bb: search_bb})
+            #loss, iou1, iou5, iou25 = vgg.validation_raw(key, search, key_bb, search_bb)
+            loss, iou1, iou5, iou25 = vgg.validation_gated(key, search, key_bb, search_bb)
 
             test_loss_sum += BATCH_SIZE * loss
             iou1_sum += BATCH_SIZE * iou1
@@ -112,35 +109,16 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
-    o, ox, oy, cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.sess.run(
-            [vgg.offset, vgg.offset_x, vgg.offset_y, vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
-             vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5,
-             vgg.pred_box, vgg.ground_box],
-            feed_dict={
-                vgg.key_img: key_img,
-                vgg.search_img: search_img,
-                vgg.key_bb: key_bb,
-                vgg.search_bb: search_bb})
-
-    print pred_box
-    print o, ox, oy
+    #cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.diagnostic_raw(
+    #        key_img, search_img, key_bb, search_bb)
+    cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.diagnostic_gated(
+            key_img, search_img, key_bb, search_bb)
 
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
     c3 = convert_corr_map(cm3)
     c4 = convert_corr_map(cm4)
     c5 = convert_corr_map(cm5)
-
-    # TODO: delete this
-    ds = ImageDraw.Draw(c5)
-    ds.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
-    offset = np.argmax(np.reshape(cm5, [1, 256 * 256]), axis=1)
-    offset_x = (offset % 256).astype(np.float32)
-    offset_y = np.floor_divide(offset, 256).astype(np.float32)
-    print offset, offset_x, offset_y
-    ds.rectangle([
-        offset_x - 10 + 8, offset_y - 10 + 8,
-        offset_x + 10 + 8, offset_y + 10 + 8], outline='blue')
 
     PAD = 2
 
@@ -153,20 +131,11 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
                   KEY_FRAME_SIZE / 2 - key_bb[1] / 2,
                   KEY_FRAME_SIZE / 2 + key_bb[0] / 2,
                   KEY_FRAME_SIZE / 2 + key_bb[1] / 2],
-                 outline='red')
+                 outline='green')
     new_im.paste(key_img, (KEY_FRAME_SIZE/2+PAD, KEY_FRAME_SIZE/2+PAD))
 
-    #red = np.zeros((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3), dtype='uint8')
-    #red[:,:,2] = 255
-    #combined_search = np.where(ground_img<0, search_img, red).reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3))
-    #new_im.paste(Image.fromarray(combined_search.astype('uint8')), (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
     search_img = Image.fromarray(search_img.reshape((SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 3)))
     ds = ImageDraw.Draw(search_img)
-    #ds.rectangle([SEARCH_FRAME_SIZE / 2 + search_bb[0, 0] - search_bb[0, 2] / 2,
-    #              SEARCH_FRAME_SIZE / 2 + search_bb[0, 1] - search_bb[0, 3] / 2,
-    #              SEARCH_FRAME_SIZE / 2 + search_bb[0, 0] + search_bb[0, 2] / 2,
-    #              SEARCH_FRAME_SIZE / 2 + search_bb[0, 1] + search_bb[0, 3] / 2],
-    #            outline='green')
     ds.rectangle([ground_box[0][0], ground_box[1][0], ground_box[2][0], ground_box[3][0]], outline='green')
     ds.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
     new_im.paste(search_img, (SEARCH_FRAME_SIZE+2*PAD + PAD, PAD))
@@ -174,9 +143,9 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     for i, ci in enumerate([c1,c2,c3,c4,c5]):
         new_im.paste(ci, ((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD, PAD))
 
-    #fnt = ImageFont.truetype('RobotoMono-Regular.ttf', 16)
-    #for i, ct in enumerate([con1, con2, con3, con4, con5]):
-    #    d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), "%.5f" % ct.reshape([1])[0], font=fnt, fill=(255, 0, 0, 255))
+    fnt = ImageFont.truetype('RobotoMono-Regular.ttf', 16)
+    for i, ct in enumerate([con1, con2, con3, con4, con5]):
+        d.text(((i+2) * (SEARCH_FRAME_SIZE+2*PAD) + PAD + 10, PAD + 10), "%.5f" % ct.reshape([1])[0], font=fnt, fill=(255, 0, 0, 255))
 
     new_im.save(name)
 
@@ -212,7 +181,6 @@ def main():
 
     diagnostic_corr_maps(vgg, 'initial.png')
 
-    '''
     validation_losses = []
     validation_iou1s = []
     validation_iou5s = []
@@ -256,8 +224,8 @@ def main():
             if key is None:
                 continue
 
-            loss, iou1, iou5, iou25 = vgg.train_finetune(key, search, key_bb, search_bb)
-            #loss, iou1, iou5, iou25 = vgg.train_gate(key, search, key_bb, search_bb)
+            #loss, iou1, iou5, iou25 = vgg.train_finetune(key, search, key_bb, search_bb)
+            loss, iou1, iou5, iou25 = vgg.train_gate(key, search, key_bb, search_bb)
 
             #print '[TRAIN] Batch loss %s %s: %.5f' % (train_cat, key_name, loss)
             epoch_loss_sum += BATCH_SIZE * loss
@@ -301,7 +269,6 @@ def main():
         'train_iou5s': train_iou5s,
         'train_iou25s': train_iou25s
     })
-    '''
     vgg.sess.close()
 
 if __name__ == '__main__':
