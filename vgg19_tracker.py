@@ -209,7 +209,7 @@ class Vgg19:
         # Tensorboard summaries
         self.raw_loss_summary = tf.summary.scalar('raw_loss', self.raw_loss)
         self.comp_loss_summary = tf.summary.scalar('comp_loss', self.comp_loss)
-        self.soft_loss_summary = tf.summary.scalaer('soft_loss', self.soft_loss)
+        self.soft_loss_summary = tf.summary.scalar('soft_loss', self.soft_loss)
         self.gated_loss_summary = tf.summary.scalar('gated_loss', self.gated_loss)
 
         self.xcorr1_summary = tf.summary.histogram('xcorr1', self.rcorr1)
@@ -228,7 +228,7 @@ class Vgg19:
             self.raw_loss_summary, self.xcorr1_summary, self.xcorr2_summary, self.xcorr3_summary,
             self.xcorr4_summary, self.xcorr5_summary])
         self.gated_summary = tf.summary.merge([
-            self.comp_loss_summary, self.soft_loss, self.gated_loss_summary, self.conf1_summary,
+            self.comp_loss_summary, self.soft_loss_summary, self.gated_loss_summary, self.conf1_summary,
             self.conf2_summary, self.conf3_summary, self.conf4_summary, self.conf5_summary])
         self.summary_writer = tf.summary.FileWriter('logs/')
 
