@@ -173,10 +173,11 @@ class Vgg19:
                                   self.conf5 * self.rcorr5) /
                                   (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
 
-        self.hard_prediction = tf.cond(self.conf1 > 0.5, self.rcorr1,
-                tf.cond(self.conf2 > 0.5, self.rcorr2,
-                    tf.cond(self.conf3 > 0.5, self.rcorr3,
-                        tf.cond(self.conf4 > 0.5, self.rcorr4, self.rcorr5))))
+        # TODO: not done, also only works for batch size 1
+        #self.hard_prediction = tf.cond(self.conf1 > 0.5, self.rcorr1,
+        #        tf.cond(self.conf2 > 0.5, self.rcorr2,
+        #            tf.cond(self.conf3 > 0.5, self.rcorr3,
+        #                tf.cond(self.conf4 > 0.5, self.rcorr4, self.rcorr5))))
 
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
 
