@@ -112,8 +112,8 @@ def convert_corr_map(corr_map):
 
 def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     # Expects key_img, search_img, ground_img to be batch size 1
-    cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.sess.run(
-            [vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
+    o, ox, oy, cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box = vgg.sess.run(
+            [vgg.offset, vgg.offset_x, vgg.offset_y, vgg.rcorr1, vgg.rcorr2, vgg.rcorr3, vgg.rcorr4, vgg.rcorr5,
              vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4, vgg.conf5,
              vgg.pred_box, vgg.ground_box],
             feed_dict={
@@ -121,6 +121,9 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
                 vgg.search_img: search_img,
                 vgg.key_bb: key_bb,
                 vgg.search_bb: search_bb})
+
+    print pred_box
+    print o, ox, oy
 
     c1 = convert_corr_map(cm1)
     c2 = convert_corr_map(cm2)
@@ -134,7 +137,7 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     offset = np.argmax(np.reshape(cm5, [1, 256 * 256]), axis=1)
     offset_x = (offset % 256).astype(np.float32)
     offset_y = np.floor_divide(offset, 256).astype(np.float32)
-    print offset_x, offset_y
+    print offset, offset_x, offset_y
     ds.rectangle([
         offset_x - 10 + 8, offset_y - 10 + 8,
         offset_x + 10 + 8, offset_y + 10 + 8], outline='blue')

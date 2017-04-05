@@ -396,12 +396,15 @@ class Vgg19:
         offset_x = tf.cast(offset % SEARCH_FRAME_SIZE, tf.float32)
         offset_y = tf.cast(tf.floordiv(offset, SEARCH_FRAME_SIZE), tf.float32)
         pred_block_size = 2 ** 4    # 256 / 16, centers pred box on max block
+        self.offset = offset
+        self.offset_x = offset_x
+        self.offset_y = offset_y
 
         # top left + bottom right coords for prediction
-        boxA_x1 = SEARCH_FRAME_SIZE / 2 + offset_x - key_bb[0] / 2 + pred_block_size / 2
-        boxA_y1 = SEARCH_FRAME_SIZE / 2 + offset_y - key_bb[1] / 2 + pred_block_size / 2
-        boxA_x2 = SEARCH_FRAME_SIZE / 2 + offset_x + key_bb[0] / 2 + pred_block_size / 2
-        boxA_y2 = SEARCH_FRAME_SIZE / 2 + offset_y + key_bb[1] / 2 + pred_block_size / 2
+        boxA_x1 = offset_x - key_bb[0] / 2 + pred_block_size / 2
+        boxA_y1 = offset_y - key_bb[1] / 2 + pred_block_size / 2
+        boxA_x2 = offset_x + key_bb[0] / 2 + pred_block_size / 2
+        boxA_y2 = offset_y + key_bb[1] / 2 + pred_block_size / 2
 
         # top left + bottom right coords for ground truth
         boxB_x1 = search_bb[:, 0] - search_bb[:, 2] / 2 + SEARCH_FRAME_SIZE / 2
