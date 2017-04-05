@@ -191,10 +191,10 @@ class Vgg19:
         self.comp_loss = self.conf1 + 2 * self.conf2 + 4 * self.conf3 + 8 * self.conf4 + 16 * self.conf5
         self.gated_loss = ((1-LAMBDA) * self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
                           + LAMBDA * self.comp_loss)
-        self.soft_IOU, self.pred_box, self.ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
-        self.soft_IOU_at_1 = self.soft_IOU[0]
-        self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
-        self.soft_IOU_full = tf.reduce_mean(self.soft_IOU)
+        #self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
+        #self.soft_IOU_at_1 = self.soft_IOU[0]
+        #self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
+        #self.soft_IOU_full = tf.reduce_mean(self.soft_IOU)
 
         # Trainers
         # TODO: experiment with LR decay?
