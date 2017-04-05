@@ -137,7 +137,7 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
     print offset_x, offset_y
     ds.rectangle([
         offset_x - 10 + 8, offset_y - 10 + 8,
-        offset_x + 10 + 8, offset-y + 10 + 8], outline='blue')
+        offset_x + 10 + 8, offset_y + 10 + 8], outline='blue')
 
     PAD = 2
 
