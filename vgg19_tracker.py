@@ -256,7 +256,7 @@ class Vgg19:
 
         return loss, iou1, iou5, iou25
 
-    def train_gate(self):
+    def train_gate(self, key_img, search_img, key_bb, search_bb):
         if self.iter_num % 10 == 0:
             _, loss, iou1, iou5, iou25, summ = self.sess.run([
                 self.train_gate_op, self.gated_loss, self.soft_IOU_at_1, self.soft_IOU_at_5,
