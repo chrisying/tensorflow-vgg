@@ -174,12 +174,11 @@ class Vgg19:
         #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
         self.raw_prediction = self.rcorr5
 
-        self.soft_prediction = ((self.conf1 * self.rcorr1 +
-                                  self.conf2 * self.rcorr2 +
-                                  self.conf3 * self.rcorr3 +
-                                  self.conf4 * self.rcorr4 +
-                                  self.conf5 * self.rcorr5) /
-                                  (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON))
+        self.soft_prediction = (self.conf1 * self.rcorr1 +      # Already normalized during rescaling
+                                self.conf2 * self.rcorr2 +
+                                self.conf3 * self.rcorr3 +
+                                self.conf4 * self.rcorr4 +
+                                self.conf5 * self.rcorr5)
 
         # TODO: not done, also only works for batch size 1
         #self.hard_prediction = tf.cond(self.conf1 > 0.5, self.rcorr1,
