@@ -162,6 +162,14 @@ class Vgg19:
         self.conf4 = self.confidence_layer(self.gate4, 'conf4')
         self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
+        # Rescaled confidence (sum ~ 1.0)
+        sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
+        self.conf1 = self.conf1 / sum_conf
+        self.conf2 = self.conf2 / sum_conf
+        self.conf3 = self.conf3 / sum_conf
+        self.conf4 = self.conf4 / sum_conf
+        self.conf5 = self.conf5 / sum_conf
+
         # Prediction and loss
         #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
         self.raw_prediction = self.rcorr5
@@ -171,7 +179,7 @@ class Vgg19:
                                   self.conf3 * self.rcorr3 +
                                   self.conf4 * self.rcorr4 +
                                   self.conf5 * self.rcorr5) /
-                                  (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + 0.0001))
+                                  (self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON))
 
         # TODO: not done, also only works for batch size 1
         #self.hard_prediction = tf.cond(self.conf1 > 0.5, self.rcorr1,
@@ -359,9 +367,9 @@ class Vgg19:
     def cross_corr_layer(self, key_pool, search_pool, name):
         with tf.variable_scope(name):
             key_mean, key_var = tf.nn.moments(key_pool, [1,2,3], keep_dims=True)
-            key_white = (key_pool - key_mean) / (tf.sqrt(key_var) + 0.0001)
+            key_white = (key_pool - key_mean) / (tf.sqrt(key_var) + EPSILON)
             search_mean, search_var = tf.nn.moments(search_pool, [1,2,3], keep_dims=True)
-            search_white = (search_pool - search_mean) / (tf.sqrt(search_var) + 0.0001)
+            search_white = (search_pool - search_mean) / (tf.sqrt(search_var) + EPSILON)
 
             cross_corr = tf.nn.conv2d(
                     search_white,
@@ -370,10 +378,10 @@ class Vgg19:
                     padding='SAME')
 
             #corr_mean, corr_var = tf.nn.moments(cross_corr, [1,2,3], keep_dims=True)
-            #corr_white = (cross_corr - corr_mean) / (tf.sqrt(corr_var) + 0.0001)
+            #corr_white = (cross_corr - corr_mean) / (tf.sqrt(corr_var) + EPSILON)
             corr_min = tf.reduce_min(cross_corr, [1,2,3], keep_dims=True)
             corr_max = tf.reduce_max(cross_corr, [1,2,3], keep_dims=True)
-            corr_white = (cross_corr - corr_min) / (corr_max - corr_min + 0.0001)
+            corr_white = (cross_corr - corr_min) / (corr_max - corr_min + EPSILON)
 
             return corr_white
 
@@ -390,7 +398,7 @@ class Vgg19:
                     tf.reshape(cmap, [corr_size ** 2]),
                     value_range=[0.0, 1.0],
                     nbins=100,
-                    dtype=tf.float32) + 0.0001,
+                    dtype=tf.float32) + EPSILON,
                 elems=corr,
                 dtype=tf.float32)
         entropy = -1 * tf.reduce_sum(hist * tf.log(hist), [1], keep_dims=True)  # B x 1
