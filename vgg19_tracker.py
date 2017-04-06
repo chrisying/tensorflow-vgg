@@ -195,7 +195,7 @@ class Vgg19:
                 (COMP_COST_FACTOR ** 3) * self.conf4 +
                 (COMP_COST_FACTOR ** 4) * self.conf5)
         self.soft_loss = self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
-        self.gated_loss = (1.0-LAMBDA) * self.soft_loss + LAMBDA * self.comp_loss
+        self.gated_loss = self.soft_loss + LAMBDA * self.comp_loss
         self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
         self.soft_IOU_at_1 = self.soft_IOU[0]
         self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
