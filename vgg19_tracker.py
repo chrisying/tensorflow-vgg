@@ -172,7 +172,14 @@ class Vgg19:
 
         # Prediction and loss
         #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
-        self.raw_prediction = self.rcorr5
+        #self.raw_prediction = self.rcorr5
+        self.ground_truth = self.generate_ground_gaussian(self.search_bb)
+        self.raw_loss1 = self.weighted_softmax_loss(self.ground_truth, self.rcorr1)
+        self.raw_loss2 = self.weighted_softmax_loss(self.ground_truth, self.rcorr2)
+        self.raw_loss3 = self.weighted_softmax_loss(self.ground_truth, self.rcorr3)
+        self.raw_loss4 = self.weighted_softmax_loss(self.ground_truth, self.rcorr4)
+        self.raw_loss5 = self.weighted_softmax_loss(self.ground_truth, self.rcorr5)
+        self.raw_loss = self.raw_loss1 + self.raw_loss2 + self.raw_loss3 + self.raw_loss4 + self.raw_loss5
 
         self.soft_prediction = (self.conf1 * self.rcorr1 +      # Already normalized during rescaling
                                 self.conf2 * self.rcorr2 +
@@ -186,9 +193,9 @@ class Vgg19:
         #            tf.cond(self.conf3 > 0.5, self.rcorr3,
         #                tf.cond(self.conf4 > 0.5, self.rcorr4, self.rcorr5))))
 
-        self.ground_truth = self.generate_ground_gaussian(self.search_bb)
 
-        self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
+        #self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
+        self.raw_prediction = self.rcorr5
         self.raw_IOU, self.raw_pred_box, self.raw_ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
         self.raw_IOU_at_1 = self.raw_IOU[0]
         self.raw_IOU_at_5 = tf.reduce_mean(self.raw_IOU[:5])
