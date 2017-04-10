@@ -59,6 +59,11 @@ def run_validation(vgg):
     iou5_sum = 0.0
     iou25_sum = 0.0
     num_samples = 0
+    c1_sum = 0.0
+    c2_sum = 0.0
+    c3_sum = 0.0
+    c4_sum = 0.0
+    c5_sum = 0.0
     for category in TEST_CATS:
         #print 'Running validation on %s' % category
         data_dir = os.path.join(PROCESSED_DIR, category)
@@ -82,13 +87,22 @@ def run_validation(vgg):
                 loss, iou1, iou5, iou25 = vgg.validation_raw(key, search, key_bb, search_bb)
             else:
                 assert(MODE == 'gating')
-                loss, iou1, iou5, iou25 = vgg.validation_gated(key, search, key_bb, search_bb)
+                loss, iou1, iou5, iou25, c1, c2, c3, c4, c5 = vgg.validation_gated(key, search, key_bb, search_bb)
+                c1_sum += c1
+                c2_sum += c2
+                c3_sum += c3
+                c4_sum += c4
+                c5_sum += c5
 
             test_loss_sum += BATCH_SIZE * loss
             iou1_sum += BATCH_SIZE * iou1
             iou5_sum += BATCH_SIZE * iou5
             iou25_sum += BATCH_SIZE * iou25
             num_samples += BATCH_SIZE
+
+    if MODE == 'gating':
+        c_sum = c1_sum + c2_sum + c3_sum + c4_sum + c5_sum
+        print '[VALID] confidence distribution: %.5f | %.5f | %.5f | %.5f | %.5f' % (c1_sum / c_sum, c2_sum / c_sum, c3_sum / c_sum, c4_sum / c_sum, c5_sum / c_sum)
 
     assert(num_samples > 0)
     #print '[VALID] Samples considered: %d' % num_samples

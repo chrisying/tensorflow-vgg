@@ -311,14 +311,15 @@ class Vgg19:
         return loss, iou1, iou5, iou25
 
     def validation_gated(self, key_img, search_img, key_bb, search_bb):
-        loss, iou1, iou5, iou25  = self.sess.run([
-            self.gated_loss, self.soft_IOU_at_1, self.soft_IOU_at_5, self.soft_IOU_full],
+        loss, iou1, iou5, iou25, c1, c2, c3, c4, c5 = self.sess.run([
+            self.gated_loss, self.soft_IOU_at_1, self.soft_IOU_at_5, self.soft_IOU_full,
+            self.conf1, self.conf2, self.conf3, self.conf4, self.conf5],
             feed_dict={
                 self.key_img: key_img,
                 self.search_img: search_img,
                 self.key_bb: key_bb,
                 self.search_bb: search_bb})
-        return loss, iou1, iou5, iou25
+        return loss, iou1, iou5, iou25, np.sum(c1), np.sum(c2), np.sum(c3), np.sum(c4), np.sum(c5)
 
     def diagnostic_raw(self, key_img, search_img, key_bb, search_bb):
         assert(search_img.shape[0] == 1)
@@ -413,12 +414,15 @@ class Vgg19:
         dep = tf.ones_like(kurt, dtype=tf.float32) * ((depth - 1.0) / 4.0)  # {0.0, 0.25, 0.5, 0.75, 1.0}
 
         # Top 5 peaks (raw)
-        peaks, _ = tf.nn.top_k(tf.reshape(corr, [-1, corr_size ** 2]), k=5)     # B x 5
+        peaks, inds = tf.nn.top_k(tf.reshape(corr, [-1, corr_size ** 2]), k=5)     # B x 5
 
-        # Top 5 peaks (after NMS)
-        # TODO
+        # Distance of top peaks from the center
+        # 0.5 adjusts for box center
+        offset_x = tf.cast(inds % corr_size, tf.float32) - corr_size / 2 + 0.5
+        offset_y = tf.cast(tf.floordiv(inds, corr_size), tf.float32) - corr_size / 2 + 0.5
+        offsets = tf.square(offset_x) + tf.square(offset_y)     # B x 5
 
-        return tf.concat([kurt, entropy, dep, peaks], axis=1)
+        return tf.concat([kurt, entropy, dep, peaks, offsets], axis=1)
 
     def confidence_layer(self, gate, name):
         with tf.variable_scope(name):
