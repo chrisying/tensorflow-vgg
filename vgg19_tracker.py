@@ -163,7 +163,7 @@ class Vgg19:
         self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
         # Rescaled confidence (sum ~ 1.0)
-        sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
+        #sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
         #self.conf1 = self.conf1 / sum_conf
         #self.conf2 = self.conf2 / sum_conf
         #self.conf3 = self.conf3 / sum_conf
@@ -201,11 +201,11 @@ class Vgg19:
         #self.soft_loss = self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
         self.gated_loss = self.soft_loss + LAMBDA * self.comp_loss
 
-        self.soft_prediction = (tf.reshape(tf.conf1, [-1,1,1,1]) * self.rcorr1 +
-                                tf.reshape(tf.conf2, [-1,1,1,1]) * self.rcorr2 +
-                                tf.reshape(tf.conf3, [-1,1,1,1]) * self.rcorr3 +
-                                tf.reshape(tf.conf4, [-1,1,1,1]) * self.rcorr4 +
-                                tf.reshape(tf.conf5, [-1,1,1,1]) * self.rcorr5)
+        self.soft_prediction = (tf.reshape(self.conf1, [-1,1,1,1]) * self.rcorr1 +
+                                tf.reshape(self.conf2, [-1,1,1,1]) * self.rcorr2 +
+                                tf.reshape(self.conf3, [-1,1,1,1]) * self.rcorr3 +
+                                tf.reshape(self.conf4, [-1,1,1,1]) * self.rcorr4 +
+                                tf.reshape(self.conf5, [-1,1,1,1]) * self.rcorr5)
 
         # Note: only works for batch size 1!
         self.hard_prediction = tf.cond(self.conf1[0,0] > 0.5, lambda: lf.rcorr1,
