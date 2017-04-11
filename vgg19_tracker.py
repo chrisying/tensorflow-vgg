@@ -208,7 +208,7 @@ class Vgg19:
                                 tf.reshape(self.conf5, [-1,1,1,1]) * self.rcorr5)
 
         # Note: only works for batch size 1!
-        self.hard_prediction = tf.cond(self.conf1[0,0] > 0.5, lambda: lf.rcorr1,
+        self.hard_prediction = tf.cond(self.conf1[0,0] > 0.5, lambda: self.rcorr1,
                 lambda: tf.cond(self.conf2[0,0] > 0.5, lambda: self.rcorr2,
                     lambda: tf.cond(self.conf3[0,0] > 0.5, lambda: self.rcorr3,
                         lambda: tf.cond(self.conf4[0,0] > 0.5, lambda: self.rcorr4, lambda: self.rcorr5))))
