@@ -163,12 +163,12 @@ class Vgg19:
         self.conf5 = self.confidence_layer(self.gate5, 'conf5')
 
         # Rescaled confidence (sum ~ 1.0)
-        #sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
-        #self.conf1 = self.conf1 / sum_conf
-        #self.conf2 = self.conf2 / sum_conf
-        #self.conf3 = self.conf3 / sum_conf
-        #self.conf4 = self.conf4 / sum_conf
-        #self.conf5 = self.conf5 / sum_conf
+        sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
+        self.conf1 = self.conf1 / sum_conf
+        self.conf2 = self.conf2 / sum_conf
+        self.conf3 = self.conf3 / sum_conf
+        self.conf4 = self.conf4 / sum_conf
+        self.conf5 = self.conf5 / sum_conf
 
         # Prediction and loss
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
