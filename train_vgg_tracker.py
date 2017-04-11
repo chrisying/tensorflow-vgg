@@ -101,8 +101,7 @@ def run_validation(vgg):
             num_samples += BATCH_SIZE
 
     if MODE == 'gating':
-        c_sum = c1_sum + c2_sum + c3_sum + c4_sum + c5_sum
-        print '[VALID] confidence distribution: %.5f | %.5f | %.5f | %.5f | %.5f' % (c1_sum / c_sum, c2_sum / c_sum, c3_sum / c_sum, c4_sum / c_sum, c5_sum / c_sum)
+        print '[VALID] confidence means: %.5f | %.5f | %.5f | %.5f | %.5f' % (c1_sum / num_samples, c2_sum / num_samples, c3_sum / num_samples, c4_sum / num_samples, c5_sum / num_samples)
 
     assert(num_samples > 0)
     #print '[VALID] Samples considered: %d' % num_samples

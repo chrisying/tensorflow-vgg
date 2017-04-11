@@ -156,7 +156,7 @@ class Vgg19:
         self.gate5 = self.extract_corr_features(self.corr5, SEARCH_FRAME_SIZE / 2 ** 4, 5)
 
         # Confidence of gates
-        self.conf1 = self.confidence_layer(self.gate1, 'conf1')
+        self.conf1 = self.confidence_layer(self.gate1, 'conf1') # B x 1
         self.conf2 = self.confidence_layer(self.gate2, 'conf2')
         self.conf3 = self.confidence_layer(self.gate3, 'conf3')
         self.conf4 = self.confidence_layer(self.gate4, 'conf4')
@@ -171,41 +171,25 @@ class Vgg19:
         #self.conf5 = self.conf5 / sum_conf
 
         # Prediction and loss
-        #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
-        #self.raw_prediction = self.rcorr5
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
-        self.raw_loss1 = self.weighted_softmax_loss(self.ground_truth, self.rcorr1)
-        self.raw_loss2 = self.weighted_softmax_loss(self.ground_truth, self.rcorr2)
-        self.raw_loss3 = self.weighted_softmax_loss(self.ground_truth, self.rcorr3)
-        self.raw_loss4 = self.weighted_softmax_loss(self.ground_truth, self.rcorr4)
-        self.raw_loss5 = self.weighted_softmax_loss(self.ground_truth, self.rcorr5)
+
+        # Raw loss for finetuning
+        self.raw_loss1 = self.softmax_loss(self.ground_truth, self.rcorr1)
+        self.raw_loss2 = self.softmax_loss(self.ground_truth, self.rcorr2)
+        self.raw_loss3 = self.softmax_loss(self.ground_truth, self.rcorr3)
+        self.raw_loss4 = self.softmax_loss(self.ground_truth, self.rcorr4)
+        self.raw_loss5 = self.softmax_loss(self.ground_truth, self.rcorr5)
         self.raw_loss = self.raw_loss1 + self.raw_loss2 + self.raw_loss3 + self.raw_loss4 + self.raw_loss5
 
-        self.soft_prediction = (self.conf1 * self.rcorr1 +      # Already normalized during rescaling
-                                self.conf2 * self.rcorr2 +
-                                self.conf3 * self.rcorr3 +
-                                self.conf4 * self.rcorr4 +
-                                self.conf5 * self.rcorr5)
-
-        self.soft_loss = (self.conf1 * self.raw_loss1 +
-                          self.conf2 * self.raw_loss2 +
-                          self.conf3 * self.raw_loss3 +
-                          self.conf4 * self.raw_loss4 +
-                          self.conf5 * self.raw_loss5) / sum_conf
-
-        # TODO: not done, also only works for batch size 1
-        #self.hard_prediction = tf.cond(self.conf1 > 0.5, self.rcorr1,
-        #        tf.cond(self.conf2 > 0.5, self.rcorr2,
-        #            tf.cond(self.conf3 > 0.5, self.rcorr3,
-        #                tf.cond(self.conf4 > 0.5, self.rcorr4, self.rcorr5))))
-
-
-        #self.raw_loss = self.weighted_softmax_loss(self.ground_truth, self.raw_prediction)
         self.raw_prediction = self.rcorr5
-        self.raw_IOU, self.raw_pred_box, self.raw_ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
-        self.raw_IOU_at_1 = self.raw_IOU[0]
-        self.raw_IOU_at_5 = tf.reduce_mean(self.raw_IOU[:5])
-        self.raw_IOU_full = tf.reduce_mean(self.raw_IOU)
+
+        # Soft loss for gating
+        self.soft_loss1 = self.weighted_softmax_loss(self.ground_truth, self.rcorr1, self.conf1)
+        self.soft_loss2 = self.weighted_softmax_loss(self.ground_truth, self.rcorr2, self.conf2)
+        self.soft_loss3 = self.weighted_softmax_loss(self.ground_truth, self.rcorr3, self.conf3)
+        self.soft_loss4 = self.weighted_softmax_loss(self.ground_truth, self.rcorr4, self.conf4)
+        self.soft_loss5 = self.weighted_softmax_loss(self.ground_truth, self.rcorr5, self.conf5)
+        self.soft_loss = self.raw_loss1 + self.raw_loss2 + self.raw_loss3 + self.raw_loss4 + self.raw_loss5
 
         # Gated loss + computational loss
         self.comp_loss = tf.reduce_mean(
@@ -216,6 +200,25 @@ class Vgg19:
                 (COMP_COST_FACTOR ** 4) * self.conf5)
         #self.soft_loss = self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
         self.gated_loss = self.soft_loss + LAMBDA * self.comp_loss
+
+        self.soft_prediction = (tf.reshape(tf.conf1, [-1,1,1,1]) * self.rcorr1 +
+                                tf.reshape(tf.conf2, [-1,1,1,1]) * self.rcorr2 +
+                                tf.reshape(tf.conf3, [-1,1,1,1]) * self.rcorr3 +
+                                tf.reshape(tf.conf4, [-1,1,1,1]) * self.rcorr4 +
+                                tf.reshape(tf.conf5, [-1,1,1,1]) * self.rcorr5)
+
+        # Note: only works for batch size 1!
+        self.hard_prediction = tf.cond(self.conf1[0,0] > 0.5, lambda: lf.rcorr1,
+                lambda: tf.cond(self.conf2[0,0] > 0.5, lambda: self.rcorr2,
+                    lambda: tf.cond(self.conf3[0,0] > 0.5, lambda: self.rcorr3,
+                        lambda: tf.cond(self.conf4[0,0] > 0.5, lambda: self.rcorr4, lambda: self.rcorr5))))
+
+        # IOU calculations
+        self.raw_IOU, self.raw_pred_box, self.raw_ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
+        self.raw_IOU_at_1 = self.raw_IOU[0]
+        self.raw_IOU_at_5 = tf.reduce_mean(self.raw_IOU[:5])
+        self.raw_IOU_full = tf.reduce_mean(self.raw_IOU)
+
         self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
         self.soft_IOU_at_1 = self.soft_IOU[0]
         self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
@@ -436,7 +439,8 @@ class Vgg19:
             weights, bias = self.get_gate_var(name, input_dim)
             muled = tf.matmul(gate, weights)
             output = tf.sigmoid(tf.nn.bias_add(tf.matmul(gate, weights), bias))
-            return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
+            return output   # B x 1
+            #return tf.reshape(output, [-1, 1, 1, 1])    # For scalar multiplication later
 
     def generate_ground_gaussian(self, bbs):
         def bb_to_gaussian(bb):
@@ -448,25 +452,31 @@ class Vgg19:
         grounds = tf.map_fn(bb_to_gaussian, elems=bbs, dtype=tf.float32, back_prop=False)
         return tf.reshape(grounds, [-1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1])
 
-    def weighted_softmax_loss(self, ground_truth, prediction):
+    def softmax_loss(self, ground_truth, prediction):
         shape = ground_truth.get_shape().as_list()  # [None, 256, 256, 1]
         flattened_shape = [-1, shape[1] * shape[2] * shape[3]]
 
         normalized_ground_truth = ground_truth / tf.reduce_sum(ground_truth, axis=[1,2,3], keep_dims=True)
 
-        # Intentional that scale is calculated over entire batch (prevents div 0 errors)
-        #pos_threshold = 0.2
-        #num_positive = tf.reduce_sum(tf.cast(ground_truth > pos_threshold, tf.float32))
-        #scale = tf.reduce_sum(tf.ones_like(ground_truth, dtype=tf.float32)) / num_positive
-        #weight = tf.where(ground_truth > pos_threshold, tf.ones_like(ground_truth) * scale, tf.ones_like(ground_truth))
+        reshaped_ground_truth = tf.reshape(normalized_ground_truth, flattened_shape)
+        reshaped_prediction = tf.reshape(prediction, flattened_shape)
+
+        softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=reshaped_prediction, labels=reshaped_ground_truth)
+        loss = tf.reduce_mean(softmax_loss)
+
+        return loss
+
+    def weighted_softmax_loss(self, ground_truth, prediction, weight):
+        shape = ground_truth.get_shape().as_list()  # [None, 256, 256, 1]
+        flattened_shape = [-1, shape[1] * shape[2] * shape[3]]
+
+        normalized_ground_truth = ground_truth / tf.reduce_sum(ground_truth, axis=[1,2,3], keep_dims=True)
 
         reshaped_ground_truth = tf.reshape(normalized_ground_truth, flattened_shape)
         reshaped_prediction = tf.reshape(prediction, flattened_shape)
-        #reshaped_weights = tf.reshape(weight, flattened_shape)
-
-        #weighted_logits = reshaped_prediction * reshaped_weights
         softmax_loss = tf.nn.softmax_cross_entropy_with_logits(logits=reshaped_prediction, labels=reshaped_ground_truth)
-        loss = tf.reduce_mean(softmax_loss)
+        weighted_loss = tf.reshape(weight, [-1]) * softmax_loss
+        loss = tf.reduce_mean(weighted_loss)
 
         return loss
 
