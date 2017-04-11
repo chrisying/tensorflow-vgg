@@ -164,11 +164,11 @@ class Vgg19:
 
         # Rescaled confidence (sum ~ 1.0)
         sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
-        self.conf1 = self.conf1 / sum_conf
-        self.conf2 = self.conf2 / sum_conf
-        self.conf3 = self.conf3 / sum_conf
-        self.conf4 = self.conf4 / sum_conf
-        self.conf5 = self.conf5 / sum_conf
+        #self.conf1 = self.conf1 / sum_conf
+        #self.conf2 = self.conf2 / sum_conf
+        #self.conf3 = self.conf3 / sum_conf
+        #self.conf4 = self.conf4 / sum_conf
+        #self.conf5 = self.conf5 / sum_conf
 
         # Prediction and loss
         #self.raw_prediction = (self.rcorr1 + self.rcorr2 + self.rcorr3 + self.rcorr4 + self.rcorr5) / 5.0
@@ -186,6 +186,12 @@ class Vgg19:
                                 self.conf3 * self.rcorr3 +
                                 self.conf4 * self.rcorr4 +
                                 self.conf5 * self.rcorr5)
+
+        self.soft_loss = (self.conf1 * self.raw_loss1 +
+                          self.conf2 * self.raw_loss2 +
+                          self.conf3 * self.raw_loss3 +
+                          self.conf4 * self.raw_loss4 +
+                          self.conf5 * self.raw_loss5) / sum_conf
 
         # TODO: not done, also only works for batch size 1
         #self.hard_prediction = tf.cond(self.conf1 > 0.5, self.rcorr1,
@@ -208,7 +214,7 @@ class Vgg19:
                 (COMP_COST_FACTOR ** 2) * self.conf3 +
                 (COMP_COST_FACTOR ** 3) * self.conf4 +
                 (COMP_COST_FACTOR ** 4) * self.conf5)
-        self.soft_loss = self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
+        #self.soft_loss = self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
         self.gated_loss = self.soft_loss + LAMBDA * self.comp_loss
         self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
         self.soft_IOU_at_1 = self.soft_IOU[0]
@@ -233,10 +239,10 @@ class Vgg19:
         self.xcorr5_summary = tf.summary.histogram('xcorr5', self.rcorr5)
 
         self.conf1_summary = tf.summary.histogram('conf1', self.conf1)
-        self.conf2_summary = tf.summary.histogram('conf2', self.conf1)
-        self.conf3_summary = tf.summary.histogram('conf3', self.conf1)
-        self.conf4_summary = tf.summary.histogram('conf4', self.conf1)
-        self.conf5_summary = tf.summary.histogram('conf5', self.conf1)
+        self.conf2_summary = tf.summary.histogram('conf2', self.conf2)
+        self.conf3_summary = tf.summary.histogram('conf3', self.conf3)
+        self.conf4_summary = tf.summary.histogram('conf4', self.conf4)
+        self.conf5_summary = tf.summary.histogram('conf5', self.conf5)
 
         self.raw_summary = tf.summary.merge([
             self.raw_loss_summary, self.xcorr1_summary, self.xcorr2_summary, self.xcorr3_summary,
