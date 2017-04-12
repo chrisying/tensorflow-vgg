@@ -93,7 +93,7 @@ def main():
 
             d = ImageDraw.Draw(search_im)
             d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
-            search_img.save(output_dir + search_frame_name)
+            search_im.save(output_dir + search_frame_name)
 
             total_frames += 1
 
