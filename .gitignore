@@ -6,5 +6,6 @@ __pycache__/
 *$py.class
 *.swp
 *.png
+*.jpg
 *.out
 logs/
