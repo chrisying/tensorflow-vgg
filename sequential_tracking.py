@@ -91,7 +91,7 @@ def main():
             prev_x = prev_x + dx
             prev_y = prev_y + dy
 
-            d = ImageDraw.(search_im)
+            d = ImageDraw.Draw(search_im)
             d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
             search_img.save(output_dir + search_frame_name)
 
