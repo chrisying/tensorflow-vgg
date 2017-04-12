@@ -38,6 +38,12 @@ def main():
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
+        d = ImageDraw.Draw(key_im)
+        d.rectangle([x, y, x + w, y + h], outline='green')
+        key_im.save(output_dir + 'key.jpg')
+
+    '''
+
         key_frame, scale = vp.extract_key_frame(key_im, x, y, w, h)
         key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
 
@@ -88,6 +94,7 @@ def main():
 
     dur = time.time() - start
     print 'Elapsed time: %d sec, frame considered: %d, FPS: %.5f' % (dur, total_frames, total_frames / float(dur))
+    '''
 
 
 if __name__ == '__main__':
