@@ -135,8 +135,8 @@ def main():
                     search_frame_name = str(search_frame_idx).zfill(8)
 
                     sx, sy, sw, sh = convert_to_xywh(ground_truth[search_frame_idx - 1])
-                    offset_x = (sx + sw/2) - (prev_x + w/2)
-                    offset_y = (sy + sh/2) - (prev_y + h/2)
+                    offset_x = (sx + sw/2) - (prev_x + prev_w/2)
+                    offset_y = (sy + sh/2) - (prev_y + prev_h/2)
 
                     if np.abs(offset_x * scale) > SEARCH_FRAME_SIZE / 2 or np.abs(offset_y * scale) > SEARCH_FRAME_SIZE / 2:
                         print 'Object leaves frame at search frame %d, (batch size = %d)' % (search_frame_idx, img_idx)
