@@ -8,16 +8,18 @@ import time
 
 import tensorflow as tf
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from CONSTANTS import *
 import vgg19_tracker as vgg19
 import vot_preprocess as vp
 
 key_frame_name = '00000001.jpg'
+output_dir = 'frames/'
 
 def PIL_to_np(pil, size):
-    return np.transpose(np.asarray(pil), [1,0,2]).reshape([1, size, size, 3])
+    #return np.transpose(np.asarray(pil), [1,0,2]).reshape([1, size, size, 3])
+    return np.asarray(pil).reshape([1, size, size, 3])
 
 def main():
 
@@ -66,6 +68,10 @@ def main():
                                vgg.search_bb: search_bb})
 
             print 'Frame %d IOU %.5f' % (frame_idx, iou)
+
+            d = ImageDraw.Draw(search_frame)
+            d.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
+            search_frame.save(output_dir + search_frame_name)
 
             prev_x = pred_box[0][0]
             prev_y = pred_box[1][0]
