@@ -38,21 +38,21 @@ def main():
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
-        #d = ImageDraw.Draw(key_im)
-        #d.rectangle([x, y, x + w, y + h], outline='green')
-        #key_im.save(output_dir + 'key.jpg')
+        d = ImageDraw.Draw(key_im)
+        d.rectangle([x, y, x + w, y + h], outline='green')
+        key_im.save(output_dir + key_frame_name)
 
         key_frame, scale = vp.extract_key_frame(key_im, x, y, w, h)
         key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
 
         scaled_w = w * scale
         scaled_h = h * scale
-        d = ImageDraw.Draw(key_frame)
-        d.rectangle([KEY_FRAME_SIZE / 2 - scaled_w/2,
-                     KEY_FRAME_SIZE / 2 - scaled_h/2,
-                     KEY_FRAME_SIZE / 2 + scaled_w/2,
-                     KEY_FRAME_SIZE / 2 + scaled_h/2], outline='green')
-        key_frame.save(output_dir + key_frame_name)
+        #d = ImageDraw.Draw(key_frame)
+        #d.rectangle([KEY_FRAME_SIZE / 2 - scaled_w/2,
+        #             KEY_FRAME_SIZE / 2 - scaled_h/2,
+        #             KEY_FRAME_SIZE / 2 + scaled_w/2,
+        #             KEY_FRAME_SIZE / 2 + scaled_h/2], outline='green')
+        #key_frame.save(output_dir + key_frame_name)
 
         key_bb = np.array([w * scale, h * scale])
 
@@ -82,15 +82,19 @@ def main():
 
             print 'Frame %d IOU %.5f' % (frame_idx, iou)
 
-            d = ImageDraw.Draw(search_frame)
-            d.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
-            search_frame.save(output_dir + search_frame_name)
+            #d = ImageDraw.Draw(search_frame)
+            #d.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
+            #search_frame.save(output_dir + search_frame_name)
 
             dx = (pred_box[0][0] + pred_box[2][0]) / 2 - SEARCH_FRAME_SIZE / 2
             dy = (pred_box[1][0] + pred_box[3][0]) / 2 - SEARCH_FRAME_SIZE / 2
-
             prev_x = prev_x + dx
             prev_y = prev_y + dy
+
+            d = ImageDraw.(search_im)
+            d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
+            search_img.save(output_dir + search_frame_name)
+
             total_frames += 1
 
     dur = time.time() - start
