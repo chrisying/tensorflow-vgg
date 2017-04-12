@@ -157,18 +157,18 @@ class Vgg19:
 
         # Confidence of gates
         self.conf1 = self.confidence_layer(self.gate1, 'conf1') # B x 1
-        self.conf2 = self.confidence_layer(self.gate2, 'conf2')
-        self.conf3 = self.confidence_layer(self.gate3, 'conf3')
-        self.conf4 = self.confidence_layer(self.gate4, 'conf4')
-        self.conf5 = self.confidence_layer(self.gate5, 'conf5')
+        self.conf2 = (1.0 - self.conf1) * self.confidence_layer(self.gate2, 'conf2')
+        self.conf3 = (1.0 - self.conf1 - self.conf2) * self.confidence_layer(self.gate3, 'conf3')
+        self.conf4 = (1.0 - self.conf1 - self.conf2, - self.conf3) * self.confidence_layer(self.gate4, 'conf4')
+        self.conf5 = (1.0 - self.conf1 - self.conf2 - self.conf3 - self.conf4)
 
         # Rescaled confidence (sum ~ 1.0)
-        sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
-        self.conf1 = self.conf1 / sum_conf
-        self.conf2 = self.conf2 / sum_conf
-        self.conf3 = self.conf3 / sum_conf
-        self.conf4 = self.conf4 / sum_conf
-        self.conf5 = self.conf5 / sum_conf
+        #sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
+        #self.conf1 = self.conf1 / sum_conf
+        #self.conf2 = self.conf2 / sum_conf
+        #self.conf3 = self.conf3 / sum_conf
+        #self.conf4 = self.conf4 / sum_conf
+        #self.conf5 = self.conf5 / sum_conf
 
         # Prediction and loss
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
