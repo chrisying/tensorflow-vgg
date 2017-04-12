@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image
 
 from CONSTANTS import *
+from vgg19_tracker import vgg19
 import vot_preprocess as vp
 
 key_frame_name = '00000001.jpg'
