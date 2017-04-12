@@ -38,11 +38,9 @@ def main():
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
-        d = ImageDraw.Draw(key_im)
-        d.rectangle([x, y, x + w, y + h], outline='green')
-        key_im.save(output_dir + 'key.jpg')
-
-    '''
+        #d = ImageDraw.Draw(key_im)
+        #d.rectangle([x, y, x + w, y + h], outline='green')
+        #key_im.save(output_dir + 'key.jpg')
 
         key_frame, scale = vp.extract_key_frame(key_im, x, y, w, h)
         key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
@@ -88,13 +86,15 @@ def main():
             d.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
             search_frame.save(output_dir + search_frame_name)
 
-            prev_x = pred_box[0][0]
-            prev_y = pred_box[1][0]
+            dx = (pred_box[0][0] + pred_box[2][0]) / 2 - SEARCH_FRAME_SIZE / 2
+            dy = (pred_box[1][0] + pred_box[3][0]) / 2 - SEARCH_FRAME_SIZE / 2
+
+            prev_x = prev_x + dx
+            prev_y = prev_y + dy
             total_frames += 1
 
     dur = time.time() - start
     print 'Elapsed time: %d sec, frame considered: %d, FPS: %.5f' % (dur, total_frames, total_frames / float(dur))
-    '''
 
 
 if __name__ == '__main__':
