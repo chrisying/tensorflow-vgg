@@ -74,7 +74,8 @@ def main():
 
             # TODO for FPS calculations, take out search_bb since gt not used
 
-            pred_box, iou = vgg.sess.run([vgg.raw_pred_box, vgg.raw_IOU_at_1],
+            #pred_box, iou = vgg.sess.run([vgg.raw_pred_box, vgg.raw_IOU_at_1],
+            pred_box = vgg.sess.run([vgg.raw_pred_box],
                     feed_dict={vgg.key_img: key_frame_np,
                                vgg.search_img: search_frame_np,
                                vgg.key_bb: key_bb})
