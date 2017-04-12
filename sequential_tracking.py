@@ -41,11 +41,13 @@ def main():
         key_frame, scale = vp.extract_key_frame(key_im, x, y, w, h)
         key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
 
+        scaled_w = w * scale
+        scaled_h = h * scale
         d = ImageDraw.Draw(key_frame)
-        d.rectangle([KEY_FRAME_SIZE / 2 - w/2,
-                     KEY_FRAME_SIZE / 2 - h/2,
-                     KEY_FRAME_SIZE / 2 + w/2,
-                     KEY_FRAME_SIZE / 2 + h/2], outline='green')
+        d.rectangle([KEY_FRAME_SIZE / 2 - scaled_w/2,
+                     KEY_FRAME_SIZE / 2 - scaled_h/2,
+                     KEY_FRAME_SIZE / 2 + scaled_w/2,
+                     KEY_FRAME_SIZE / 2 + scaled_h/2], outline='green')
         key_frame.save(output_dir + key_frame_name)
 
         key_bb = np.array([w * scale, h * scale])
