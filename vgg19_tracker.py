@@ -162,6 +162,10 @@ class Vgg19:
         self.conf4 = (1.0 - self.conf1 - self.conf2, - self.conf3) * self.confidence_layer(self.gate4, 'conf4')
         self.conf5 = (1.0 - self.conf1 - self.conf2 - self.conf3 - self.conf4)
         print self.conf1.get_shape().as_list()
+        print self.conf2.get_shape().as_list()
+        print self.conf3.get_shape().as_list()
+        print self.conf4.get_shape().as_list()
+        print self.conf5.get_shape().as_list()
 
         # Rescaled confidence (sum ~ 1.0)
         #sum_conf = self.conf1 + self.conf2 + self.conf3 + self.conf4 + self.conf5 + EPSILON
