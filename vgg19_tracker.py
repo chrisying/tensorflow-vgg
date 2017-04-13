@@ -192,12 +192,18 @@ class Vgg19:
         self.soft_loss = self.soft_loss1 + self.soft_loss2 + self.soft_loss3 + self.soft_loss4 + self.soft_loss5
 
         # Gated loss + computational loss
+        #self.comp_loss = tf.reduce_mean(
+        #        (COMP_COST_FACTOR ** 0) * self.conf1 +
+        #        (COMP_COST_FACTOR ** 1) * self.conf2 +
+        #        (COMP_COST_FACTOR ** 2) * self.conf3 +
+        #        (COMP_COST_FACTOR ** 3) * self.conf4 +
+        #        (COMP_COST_FACTOR ** 4) * self.conf5)
         self.comp_loss = tf.reduce_mean(
-                (COMP_COST_FACTOR ** 0) * self.conf1 +
-                (COMP_COST_FACTOR ** 1) * self.conf2 +
-                (COMP_COST_FACTOR ** 2) * self.conf3 +
-                (COMP_COST_FACTOR ** 3) * self.conf4 +
-                (COMP_COST_FACTOR ** 4) * self.conf5)
+                (COMP_COST_FACTOR * 1) * self.conf1 +
+                (COMP_COST_FACTOR * 2) * self.conf2 +
+                (COMP_COST_FACTOR * 3) * self.conf3 +
+                (COMP_COST_FACTOR * 4) * self.conf4 +
+                (COMP_COST_FACTOR * 5) * self.conf5)
         #self.soft_loss = self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
         self.gated_loss = self.soft_loss + LAMBDA * self.comp_loss
 
