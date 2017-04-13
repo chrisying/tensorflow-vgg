@@ -20,6 +20,7 @@ LAMBDA = 1.0       # [0.0, 1.0], higher = more weight to computational cost
 FINETUNE_LR = 1e-7
 GATE_LR = 1e-3
 COMP_COST_FACTOR = 2.0  # higher = more penalty to deeper computation
+GATE_THRESHOLD = 0.25
 
 TRAIN_EPOCHS = 1
 TRAIN_CATS = ['bag',

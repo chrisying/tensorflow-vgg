@@ -214,10 +214,10 @@ class Vgg19:
                                 tf.reshape(self.conf5, [-1,1,1,1]) * self.rcorr5)
 
         # Note: only works for batch size 1!
-        self.hard_prediction = tf.cond(self.conf1[0,0] > 0.5, lambda: self.rcorr1,
-                lambda: tf.cond(self.conf2[0,0] > 0.5, lambda: self.rcorr2,
-                    lambda: tf.cond(self.conf3[0,0] > 0.5, lambda: self.rcorr3,
-                        lambda: tf.cond(self.conf4[0,0] > 0.5, lambda: self.rcorr4, lambda: self.rcorr5))))
+        self.hard_prediction = tf.cond(self.conf1[0,0] > GATE_THRESHOLD, lambda: self.rcorr1,
+                lambda: tf.cond(self.conf2[0,0] > GATE_THRESHOLD, lambda: self.rcorr2,
+                    lambda: tf.cond(self.conf3[0,0] > GATE_THRESHOLD, lambda: self.rcorr3,
+                        lambda: tf.cond(self.conf4[0,0] > GATE_THRESHOLD, lambda: self.rcorr4, lambda: self.rcorr5))))
 
         # IOU calculations
         self.raw_IOU, self.raw_pred_box, self.raw_ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
@@ -225,7 +225,8 @@ class Vgg19:
         self.raw_IOU_at_5 = tf.reduce_mean(self.raw_IOU[:5])
         self.raw_IOU_full = tf.reduce_mean(self.raw_IOU)
 
-        self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
+        #self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
+        self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.hard_prediction, self.key_bb, self.search_bb)
         self.soft_IOU_at_1 = self.soft_IOU[0]
         self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
         self.soft_IOU_full = tf.reduce_mean(self.soft_IOU)
