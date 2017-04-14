@@ -381,8 +381,8 @@ class Vgg19:
             pred = r
 
         if pred is None:
-            for idx, conf, rcorr in [(2, self.conf2, self.rcorr1),
-                                     (3, self.conf3, self.rcorr2),
+            for idx, conf, rcorr in [(2, self.conf2, self.rcorr2),
+                                     (3, self.conf3, self.rcorr3),
                                      (4, self.conf4, self.rcorr4)]:
                 c, r = self.sess.partial_run(pr, [conf, rcorr])
                 if c > GATE_THRESHOLD:
