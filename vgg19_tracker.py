@@ -371,7 +371,7 @@ class Vgg19:
 
     def sequential_gated_tracking(self, key_frame, search_frame, key_bb, search_bb):
         pred = None
-        pr = self.sess.partial_run_setup([self.conf1, self.conf2, self.conf3, self.conf4], [self.key_img, self.search_img])
+        pr = self.sess.partial_run_setup([self.conf1, self.conf2, self.conf3, self.conf4, self.rcorr1, self.rcorr2, self.rcorr3, self.rcorr4, self.rcorr5], [self.key_img, self.search_img])
         for idx, conf, rcorr in [(1, self.conf1, self.rcorr1),
                                  (2, self.conf2, self.rcorr2),
                                  (3, self.conf3, self.rcorr3),
