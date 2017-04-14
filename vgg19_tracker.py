@@ -226,7 +226,7 @@ class Vgg19:
         self.raw_IOU_full = tf.reduce_mean(self.raw_IOU)
 
         #self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
-        self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.hard_prediction, self.key_bb, self.search_bb)
+        self.soft_IOU, self.soft_pred_box, self.soft_ground_box = self.IOU(self.soft_prediction, self.key_bb, self.search_bb)
         self.soft_IOU_at_1 = self.soft_IOU[0]
         self.soft_IOU_at_5 = tf.reduce_mean(self.soft_IOU[:5])
         self.soft_IOU_full = tf.reduce_mean(self.soft_IOU)
