@@ -70,10 +70,11 @@ def main():
             search_frame = vp.extract_search_frame(search_im, prev_x, prev_y, w, h, scale)
             search_frame_np = PIL_to_np(search_frame, SEARCH_FRAME_SIZE)
 
-            #search_bb = np.array([[offset_x * scale, offset_y * scale, sw * scale, sh * scale]])
+            search_bb = np.array([[offset_x * scale, offset_y * scale, sw * scale, sh * scale]])
 
             # TODO for FPS calculations, take out search_bb since gt not used
 
+            '''
             #pred_box, iou = vgg.sess.run([vgg.raw_pred_box, vgg.raw_IOU_at_1],
             pred_box = vgg.sess.run(vgg.raw_pred_box,
                     feed_dict={vgg.key_img: key_frame_np,
@@ -81,6 +82,8 @@ def main():
                                vgg.key_bb: key_bb})
             #                   vgg.key_bb: key_bb,
             #                   vgg.search_bb: search_bb})
+            '''
+            pred_box, iou = vgg.sequential_gated_tracking(key_frame_np, search_frame_np, key_bb, search_bb)
 
             #print 'Frame %d IOU %.5f' % (frame_idx, iou)
 

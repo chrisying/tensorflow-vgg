@@ -213,11 +213,11 @@ class Vgg19:
                                 tf.reshape(self.conf4, [-1,1,1,1]) * self.rcorr4 +
                                 tf.reshape(self.conf5, [-1,1,1,1]) * self.rcorr5)
 
-        # Note: only works for batch size 1!
-        self.hard_prediction = tf.cond(self.conf1[0,0] > GATE_THRESHOLD, lambda: self.rcorr1,
-                lambda: tf.cond(self.conf2[0,0] > GATE_THRESHOLD, lambda: self.rcorr2,
-                    lambda: tf.cond(self.conf3[0,0] > GATE_THRESHOLD, lambda: self.rcorr3,
-                        lambda: tf.cond(self.conf4[0,0] > GATE_THRESHOLD, lambda: self.rcorr4, lambda: self.rcorr5))))
+        # Note: only works for batch size 1! (this doesn't actually implement real conditional computation)
+        #self.hard_prediction = tf.cond(self.conf1[0,0] > GATE_THRESHOLD, lambda: self.rcorr1,
+        #        lambda: tf.cond(self.conf2[0,0] > GATE_THRESHOLD, lambda: self.rcorr2,
+        #            lambda: tf.cond(self.conf3[0,0] > GATE_THRESHOLD, lambda: self.rcorr3,
+        #                lambda: tf.cond(self.conf4[0,0] > GATE_THRESHOLD, lambda: self.rcorr4, lambda: self.rcorr5))))
 
         # IOU calculations
         self.raw_IOU, self.raw_pred_box, self.raw_ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
@@ -261,6 +261,10 @@ class Vgg19:
             self.comp_loss_summary, self.soft_loss_summary, self.gated_loss_summary, self.conf1_summary,
             self.conf2_summary, self.conf3_summary, self.conf4_summary, self.conf5_summary])
         self.summary_writer = tf.summary.FileWriter('logs/')
+
+        # Conditional computation variables
+        self.corr_map = tf.placeholder(tf.float32, [1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE< 1])
+        self.cond_IOU, self.cond_pred_box, _ = self.IOU(self.corr_map, self.key_bb, self.search_bb)
 
         self.data_dict = None
         self.sess.run(tf.global_variables_initializer())
@@ -364,6 +368,32 @@ class Vgg19:
                     self.search_bb: search_bb})
 
         return cm1, cm2, cm3, cm4, cm5, con1, con2, con3, con4, con5, pred_box, ground_box
+
+    def sequential_gated_tracking(self, key_frame, search_frame, key_bb, search_bb):
+        pred = None
+        pr = self.sess.partial_run_setup([self.conf1, self.conf2, self.conf3, self.conf4], [self.key_img, self.search_img])
+        for idx, conf, rcorr in [(1, self.conf1, self.rcorr1),
+                                 (2, self.conf2, self.rcorr2),
+                                 (3, self.conf3, self.rcorr3),
+                                 (4, self.conf4, self.rcorr4)]:
+            c, r = self.sess.partial_run(pr, [conf, rcorr], feed_dict={
+                self.key_img: key_frame,
+                self.search_img: search_frame})
+            if c > GATE_THRESHOLD:
+                print 'Using depth %d' % idx
+                pred = r
+                break
+        if pred is None:
+            print 'Using depth 5'
+            pred = self.sess.partial_run(pr, self.rcorr5)
+
+        iou, pred_box = self.sess.run([self.cond_IOU, self.conf_pred_box], feed_dict={
+            self.corr_map: pred,
+            self.key_bb: key_bb,
+            self.search_bb: search_bb})
+
+        print iou
+        return pred_box
 
     ## Custom layers
 
