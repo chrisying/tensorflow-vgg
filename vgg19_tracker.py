@@ -263,7 +263,7 @@ class Vgg19:
         self.summary_writer = tf.summary.FileWriter('logs/')
 
         # Conditional computation variables
-        self.corr_map = tf.placeholder(tf.float32, [1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE< 1])
+        self.corr_map = tf.placeholder(tf.float32, [1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1])
         self.cond_IOU, self.cond_pred_box, _ = self.IOU(self.corr_map, self.key_bb, self.search_bb)
 
         self.data_dict = None
@@ -386,8 +386,6 @@ class Vgg19:
         if pred is None:
             print 'Using depth 5'
             pred = self.sess.partial_run(pr, self.rcorr5)
-
-        print pred.shape
 
         iou, pred_box = self.sess.run([self.cond_IOU, self.conf_pred_box], feed_dict={
             self.corr_map: pred,
