@@ -377,7 +377,7 @@ class Vgg19:
             self.key_img: key_frame,
             self.search_img: search_frame})
         if c > GATE_THRESHOLD:
-            print 'Using depth 1'
+            #print 'Using depth 1'
             pred = r
 
         if pred is None:
@@ -386,20 +386,20 @@ class Vgg19:
                                      (4, self.conf4, self.rcorr4)]:
                 c, r = self.sess.partial_run(pr, [conf, rcorr])
                 if c > GATE_THRESHOLD:
-                    print 'Using depth %d' % idx
+                    #print 'Using depth %d' % idx
                     pred = r
                     break
 
         if pred is None:
-            print 'Using depth 5'
+            #print 'Using depth 5'
             pred = self.sess.partial_run(pr, self.rcorr5)
 
-        iou, pred_box = self.sess.run([self.cond_IOU, self.cond_pred_box], feed_dict={
+        #iou, pred_box = self.sess.run([self.cond_IOU, self.cond_pred_box], feed_dict={
+        pred_box = self.sess.run([self.cond_pred_box], feed_dict={
             self.corr_map: pred,
-            self.key_bb: key_bb,
-            self.search_bb: search_bb})
+            self.key_bb: key_bb})
+            #self.search_bb: search_bb})
 
-        print iou
         return pred_box
 
     ## Custom layers
