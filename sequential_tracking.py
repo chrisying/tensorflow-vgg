@@ -84,6 +84,7 @@ def main():
             #                   vgg.search_bb: search_bb})
             '''
             pred_box = vgg.sequential_gated_tracking(key_frame_np, search_frame_np, key_bb, search_bb)
+            print pred_box
 
             #print 'Frame %d IOU %.5f' % (frame_idx, iou)
 
