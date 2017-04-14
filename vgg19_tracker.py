@@ -394,7 +394,7 @@ class Vgg19:
             print 'Using depth 5'
             pred = self.sess.partial_run(pr, self.rcorr5)
 
-        iou, pred_box = self.sess.run([self.cond_IOU, self.conf_pred_box], feed_dict={
+        iou, pred_box = self.sess.run([self.cond_IOU, self.cond_pred_box], feed_dict={
             self.corr_map: pred,
             self.key_bb: key_bb,
             self.search_bb: search_bb})
