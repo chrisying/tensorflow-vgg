@@ -372,17 +372,24 @@ class Vgg19:
     def sequential_gated_tracking(self, key_frame, search_frame, key_bb, search_bb):
         pred = None
         pr = self.sess.partial_run_setup([self.conf1, self.conf2, self.conf3, self.conf4, self.rcorr1, self.rcorr2, self.rcorr3, self.rcorr4, self.rcorr5], [self.key_img, self.search_img])
-        for idx, conf, rcorr in [(1, self.conf1, self.rcorr1),
-                                 (2, self.conf2, self.rcorr2),
-                                 (3, self.conf3, self.rcorr3),
-                                 (4, self.conf4, self.rcorr4)]:
-            c, r = self.sess.partial_run(pr, [conf, rcorr], feed_dict={
-                self.key_img: key_frame,
-                self.search_img: search_frame})
-            if c > GATE_THRESHOLD:
-                print 'Using depth %d' % idx
-                pred = r
-                break
+
+        c, r = self.sess.partial_run(pr, [self.conf1, self.rcorr1], feed_dict={
+            self.key_img: key_frame,
+            self.search_img: search_frame})
+        if c > GATE_THRESHOLD:
+            print 'Using depth 1'
+            pred = r
+
+        if pred is None:
+            for idx, conf, rcorr in [(2, self.conf2, self.rcorr1),
+                                     (3, self.conf3, self.rcorr2),
+                                     (4, self.conf4, self.rcorr4)]:
+                c, r = self.sess.partial_run(pr, [conf, rcorr])
+                if c > GATE_THRESHOLD:
+                    print 'Using depth %d' % idx
+                    pred = r
+                    break
+
         if pred is None:
             print 'Using depth 5'
             pred = self.sess.partial_run(pr, self.rcorr5)
