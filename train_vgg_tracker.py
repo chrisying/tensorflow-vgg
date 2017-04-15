@@ -133,7 +133,7 @@ def visualize_corr_maps(vgg, name, key_img, search_img, key_bb, search_bb):
 
     PAD = 2
 
-    new_im = Image.new('RGB', ((SEARCH_FRAME_SIZE+2*PAD) * 7, (SEARCH_FRAME_SIZE+2*PAD)), (128,128,128))
+    new_im = Image.new('RGB', ((SEARCH_FRAME_SIZE+2*PAD) * 7, (SEARCH_FRAME_SIZE+2*PAD)), (240,240,240))
     d = ImageDraw.Draw(new_im)
 
     key_img = Image.fromarray(key_img.reshape((KEY_FRAME_SIZE, KEY_FRAME_SIZE, 3)))
