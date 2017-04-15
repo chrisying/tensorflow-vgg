@@ -68,7 +68,7 @@ def run_validation(vgg):
             if key is None:
                 continue
 
-            iou25, c1, c2, c3, c4 = vgg.sess.run([vgg.soft_iou_full, vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4],
+            iou25, c1, c2, c3, c4 = vgg.sess.run([vgg.soft_IOU_full, vgg.conf1, vgg.conf2, vgg.conf3, vgg.conf4],
                     feed_dict={vgg.key_img: key,
                                vgg.search_img: search,
                                vgg.key_bb: key_bb,
@@ -88,7 +88,7 @@ def run_validation(vgg):
             iou25_sum += BATCH_SIZE * iou25
             num_samples += BATCH_SIZE
 
-    print 'IOU@25: %.5f, FLOPs: %.5f' % (iou25_sum / num_samples, cost_sum / num_samples)
+    print '[VALID] IOU@25: %.5f, FLOPs: %.5f' % (iou25_sum / num_samples, cost_sum / num_samples)
     return
 
 def convert_corr_map(corr_map):
