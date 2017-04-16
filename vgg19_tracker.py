@@ -214,10 +214,10 @@ class Vgg19:
                                 tf.reshape(self.conf5, [-1,1,1,1]) * self.rcorr5)
 
         # Note: only works for batch size 1! (this doesn't actually implement real conditional computation)
-        #self.hard_prediction = tf.cond(self.conf1[0,0] > GATE_THRESHOLD, lambda: self.rcorr1,
-        #        lambda: tf.cond(self.conf2[0,0] > GATE_THRESHOLD, lambda: self.rcorr2,
-        #            lambda: tf.cond(self.conf3[0,0] > GATE_THRESHOLD, lambda: self.rcorr3,
-        #                lambda: tf.cond(self.conf4[0,0] > GATE_THRESHOLD, lambda: self.rcorr4, lambda: self.rcorr5))))
+        self.hard_prediction = tf.cond(self.conf1[0,0] > GATE_THRESHOLD, lambda: self.rcorr1,
+                lambda: tf.cond(self.conf2[0,0] > GATE_THRESHOLD, lambda: self.rcorr2,
+                    lambda: tf.cond(self.conf3[0,0] > GATE_THRESHOLD, lambda: self.rcorr3,
+                        lambda: tf.cond(self.conf4[0,0] > GATE_THRESHOLD, lambda: self.rcorr4, lambda: self.rcorr5))))
 
         # IOU calculations
         self.raw_IOU, self.raw_pred_box, self.raw_ground_box = self.IOU(self.raw_prediction, self.key_bb, self.search_bb)
