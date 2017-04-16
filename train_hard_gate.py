@@ -101,7 +101,7 @@ def run_validation(vgg):
             num_samples += BATCH_SIZE
 
     print '[VALID] soft IOU@25: %.5f, hard IOU@25: %.5f, FLOPs: %.5f' % (iou25_sum / num_samples, hard_iou25_sum / num_samples, cost_sum / num_samples)
-    print map(counts, lambda x: float(x)/num_samples)
+    print map(lambda x: float(x)/num_samples, counts)
     return
 
 def convert_corr_map(corr_map):
