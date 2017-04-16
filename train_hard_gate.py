@@ -55,8 +55,10 @@ def load_batch(category, key_name):
 
 def run_validation(vgg):
     iou25_sum = 0.0
+    hard_iou25_sum = 0.0
     num_samples = 0
     cost_sum = 0
+    counts = [0,0,0,0,0]
     for category in TEST_CATS:
         #print 'Running validation on %s' % category
         data_dir = os.path.join(PROCESSED_DIR, category)
@@ -76,19 +78,30 @@ def run_validation(vgg):
 
             for i in range(BATCH_SIZE):
                 added = False
-                for c, cst in [(c1, 2.78), (c2, 67.7), (c3, 160.75), (c4, 253.79)]:
+                for idx, c, cst in [(0, c1, 2.78), (1, c2, 67.7), (2, c3, 160.75), (3, c4, 253.79)]:
                     if c[i, 0] > GATE_THRESHOLD:
                         cost_sum += cst
+                        counts[idx] += 1
                         added = True
                         break
                 if not added:
+                    counts[4] += 1
                     cost_sum += 280.37
+
+            for i in range(BATCH_SIZE):
+                hard_iou25 = vgg.sess.run(vgg.hard_IOU,
+                        feed_dict{vgg.key_img: key,
+                                  vgg.search_img: search[i:i+1, :, :, :],
+                                  vgg.key_bb: key_bb,
+                                  vgg.search_bb: search_bb[i:i+1, :]})
+                hard_iou25_sum += hard_iou25
 
 
             iou25_sum += BATCH_SIZE * iou25
             num_samples += BATCH_SIZE
 
-    print '[VALID] IOU@25: %.5f, FLOPs: %.5f' % (iou25_sum / num_samples, cost_sum / num_samples)
+    print '[VALID] soft IOU@25: %.5f, hard IOU@25: %.5f, FLOPs: %.5f' % (iou25_sum / num_samples, hard_iou25_sum / num_samples, cost_sum / num_samples)
+    print map(counts, lambda x: float(x)/num_samples)
     return
 
 def convert_corr_map(corr_map):
