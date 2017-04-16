@@ -266,7 +266,9 @@ class Vgg19:
         self.corr_map = tf.placeholder(tf.float32, [1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1])
         self.cond_IOU, self.cond_pred_box, _ = self.IOU(self.corr_map, self.key_bb, self.search_bb)
 
-        self.hard_IOU, _, _ = tf.reduce_mean(self.IOU(self.hard_prediction, self.key_bb, self.search_bb))
+        self.hard_IOU_all, _, _ = self.IOU(self.hard_prediction, self.key_bb, self.search_bb)
+        print self.hard_IOU_all.get_shape()
+        self.hard_IOU = tf.reduce_mean(self.hard_IOU_all)
 
         self.data_dict = None
         self.sess.run(tf.global_variables_initializer())
