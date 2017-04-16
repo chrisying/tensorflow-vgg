@@ -90,7 +90,7 @@ def run_validation(vgg):
 
             for i in range(BATCH_SIZE):
                 hard_iou25 = vgg.sess.run(vgg.hard_IOU,
-                        feed_dict{vgg.key_img: key,
+                        feed_dict={vgg.key_img: key,
                                   vgg.search_img: search[i:i+1, :, :, :],
                                   vgg.key_bb: key_bb,
                                   vgg.search_bb: search_bb[i:i+1, :]})
