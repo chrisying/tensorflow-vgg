@@ -267,7 +267,6 @@ class Vgg19:
         self.cond_IOU, self.cond_pred_box, _ = self.IOU(self.corr_map, self.key_bb, self.search_bb)
 
         self.hard_IOU_all, _, _ = self.IOU(self.hard_prediction, self.key_bb, self.search_bb)
-        print self.hard_IOU_all.get_shape()
         self.hard_IOU = tf.reduce_mean(self.hard_IOU_all)
 
         self.data_dict = None
