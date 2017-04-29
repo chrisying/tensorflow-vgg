@@ -29,6 +29,7 @@ def main():
 
     vgg = vgg19.Vgg19(weights_file)
     total_frames = 0
+    iou_sum = 0.0
 
     start = time.time()
     for cat in TEST_CATS:
@@ -36,11 +37,15 @@ def main():
         ground_truth = open(os.path.join(cat_dir, 'groundtruth.txt')).readlines()
         num_frames = len(ground_truth)
 
+        out_dir = os.path.join(output_dir, cat)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
         d = ImageDraw.Draw(key_im)
         d.rectangle([x, y, x + w, y + h], outline='green')
-        key_im.save(output_dir + key_frame_name)
+        key_im.save(os.path.join(out_dir, key_frame_name))
 
         key_frame, scale = vp.extract_key_frame(key_im, x, y, w, h)
         key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
@@ -81,6 +86,7 @@ def main():
                                vgg.key_bb: key_bb,
                                vgg.search_bb: search_bb})
             #pred_box = vgg.sequential_gated_tracking(key_frame_np, search_frame_np, key_bb, search_bb)
+            iou_sum += iou
 
             print 'Frame %d IOU %.5f' % (frame_idx, iou)
 
@@ -95,12 +101,12 @@ def main():
 
             d = ImageDraw.Draw(search_im)
             d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
-            search_im.save(output_dir + search_frame_name)
+            search_im.save(os.path.join(out_dir, search_frame_name))
 
             total_frames += 1
 
     dur = time.time() - start
-    print 'Elapsed time: %d sec, frame considered: %d, FPS: %.5f' % (dur, total_frames, total_frames / float(dur))
+    print 'Elapsed time: %d sec, frame considered: %d, FPS: %.5f, IOU: %.5f' % (dur, total_frames, total_frames / float(dur), iou_sum / total_frames)
 
 
 if __name__ == '__main__':
