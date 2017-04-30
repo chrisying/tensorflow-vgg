@@ -17,6 +17,9 @@ import vot_preprocess as vp
 key_frame_name = '00000001.jpg'
 output_dir = 'frames/'
 
+# whether to update the key_frame or not
+SWAP = True
+
 def PIL_to_np(pil, size):
     #return np.transpose(np.asarray(pil), [1,0,2]).reshape([1, size, size, 3])
     return np.asarray(pil).reshape([1, size, size, 3])
@@ -43,12 +46,13 @@ def main():
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
-        d = ImageDraw.Draw(key_im)
-        d.rectangle([x, y, x + w, y + h], outline='green')
-        key_im.save(os.path.join(out_dir, key_frame_name))
 
         key_frame, scale = vp.extract_key_frame(key_im, x, y, w, h)
         key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
+
+        d = ImageDraw.Draw(key_im)
+        d.rectangle([x, y, x + w, y + h], outline='green')
+        key_im.save(os.path.join(out_dir, key_frame_name))
 
         #scaled_w = w * scale
         #scaled_h = h * scale
@@ -98,6 +102,10 @@ def main():
             dy = (pred_box[1][0] + pred_box[3][0]) / 2 - SEARCH_FRAME_SIZE / 2
             prev_x = prev_x + dx
             prev_y = prev_y + dy
+
+            if SWAP == True:
+                new_key_frame, _ = vp.extract_key_frame(search_im, prev_x, prev_y, w, h)
+                key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
 
             d = ImageDraw.Draw(search_im)
             d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
