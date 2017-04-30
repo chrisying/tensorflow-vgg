@@ -54,14 +54,14 @@ def main():
         d.rectangle([x, y, x + w, y + h], outline='green')
         key_im.save(os.path.join(out_dir, key_frame_name))
 
-        #scaled_w = w * scale
-        #scaled_h = h * scale
-        #d = ImageDraw.Draw(key_frame)
-        #d.rectangle([KEY_FRAME_SIZE / 2 - scaled_w/2,
-        #             KEY_FRAME_SIZE / 2 - scaled_h/2,
-        #             KEY_FRAME_SIZE / 2 + scaled_w/2,
-        #             KEY_FRAME_SIZE / 2 + scaled_h/2], outline='green')
-        #key_frame.save(os.path.join(out_dir, 'keys', key_frame_name))
+        scaled_w = w * scale
+        scaled_h = h * scale
+        d = ImageDraw.Draw(key_frame)
+        d.rectangle([KEY_FRAME_SIZE / 2 - scaled_w/2,
+                     KEY_FRAME_SIZE / 2 - scaled_h/2,
+                     KEY_FRAME_SIZE / 2 + scaled_w/2,
+                     KEY_FRAME_SIZE / 2 + scaled_h/2], outline='green')
+        key_frame.save(os.path.join(out_dir, 'keys', key_frame_name))
 
         key_bb = np.array([w * scale, h * scale])
 
@@ -103,9 +103,10 @@ def main():
             prev_x = prev_x + dx
             prev_y = prev_y + dy
 
-            if SWAP == True:
+            if SWAP == True and iou >= 0.75:
                 new_key_frame, _ = vp.extract_key_frame(search_im, prev_x, prev_y, w, h)
                 key_frame_np = PIL_to_np(new_key_frame, KEY_FRAME_SIZE)
+                print 'updated key_frame at frame %d' % frame_idx
 
                 #d = ImageDraw.Draw(new_key_frame)
                 #d.rectangle([KEY_FRAME_SIZE / 2 - scaled_w/2,
