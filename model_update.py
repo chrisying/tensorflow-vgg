@@ -1,5 +1,5 @@
 """
-Sequential tracking evaluation
+Updaing key frame tests
 """
 
 import os
@@ -42,7 +42,7 @@ def main():
 
         out_dir = os.path.join(output_dir, cat)
         if not os.path.exists(out_dir):
-            os.makedirs(os.path.join(out_dir, 'keys'))
+            os.makedirs(os.path.join(out_dir, 'keys/'))
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
