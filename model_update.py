@@ -42,7 +42,7 @@ def main():
 
         out_dir = os.path.join(output_dir, cat)
         if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+            os.makedirs(os.path.join(out_dir, 'keys'))
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
@@ -108,12 +108,12 @@ def main():
                 key_frame_np = PIL_to_np(new_key_frame, KEY_FRAME_SIZE)
                 print 'updated key_frame at frame %d' % frame_idx
 
-                #d = ImageDraw.Draw(new_key_frame)
-                #d.rectangle([KEY_FRAME_SIZE / 2 - scaled_w/2,
-                #             KEY_FRAME_SIZE / 2 - scaled_h/2,
-                #             KEY_FRAME_SIZE / 2 + scaled_w/2,
-                #             KEY_FRAME_SIZE / 2 + scaled_h/2], outline='green')
-                #new_key_frame.save(os.path.join(out_dir, 'keys', search_frame_name))
+                d = ImageDraw.Draw(new_key_frame)
+                d.rectangle([KEY_FRAME_SIZE / 2 - scaled_w/2,
+                             KEY_FRAME_SIZE / 2 - scaled_h/2,
+                             KEY_FRAME_SIZE / 2 + scaled_w/2,
+                             KEY_FRAME_SIZE / 2 + scaled_h/2], outline='green')
+                new_key_frame.save(os.path.join(out_dir, 'keys', search_frame_name))
 
             d = ImageDraw.Draw(search_im)
             d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
