@@ -39,9 +39,9 @@ def main():
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
-        #d = ImageDraw.Draw(key_im)
-        #d.rectangle([x, y, x + w, y + h], outline='green')
-        #key_im.save(output_dir + key_frame_name)
+        d = ImageDraw.Draw(key_im)
+        d.rectangle([x, y, x + w, y + h], outline='green')
+        key_im.save(output_dir + key_frame_name)
 
         key_frame, scale = vp.extract_key_frame(key_im, x, y, w, h)
         key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
@@ -75,16 +75,15 @@ def main():
 
             # TODO for FPS calculations, take out search_bb since gt not used
 
-            #pred_box, iou = vgg.sess.run([vgg.raw_pred_box, vgg.raw_IOU_at_1],
-            pred_box = vgg.sess.run(vgg.soft_pred_box,
+            pred_box, iou = vgg.sess.run([vgg.raw_pred_box, vgg.raw_IOU_at_1],
+            #pred_box = vgg.sess.run(vgg.soft_pred_box,
                     feed_dict={vgg.key_img: key_frame_np,
                                vgg.search_img: search_frame_np,
-                               vgg.key_bb: key_bb})
-            #                   vgg.key_bb: key_bb,
-            #                   vgg.search_bb: search_bb})
+                               vgg.key_bb: key_bb,
+                               vgg.search_bb: search_bb})
             #pred_box = vgg.sequential_gated_tracking(key_frame_np, search_frame_np, key_bb, search_bb)
 
-            #print 'Frame %d IOU %.5f' % (frame_idx, iou)
+            print 'Frame %d IOU %.5f' % (frame_idx, iou)
 
             #d = ImageDraw.Draw(search_frame)
             #d.rectangle([pred_box[0][0], pred_box[1][0], pred_box[2][0], pred_box[3][0]], outline='red')
@@ -95,9 +94,9 @@ def main():
             prev_x = prev_x + dx
             prev_y = prev_y + dy
 
-            #d = ImageDraw.Draw(search_im)
-            #d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
-            #search_im.save(output_dir + search_frame_name)
+            d = ImageDraw.Draw(search_im)
+            d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
+            search_im.save(output_dir + search_frame_name)
 
             total_frames += 1
 
