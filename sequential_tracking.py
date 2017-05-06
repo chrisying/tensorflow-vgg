@@ -11,7 +11,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from CONSTANTS import *
-import vgg19_tracker as vgg19
+#import vgg19_tracker as vgg19
+import full_tracker as vgg19        # Full resolution (slow) tracker
 import vot_preprocess as vp
 
 key_frame_name = '00000001.jpg'
