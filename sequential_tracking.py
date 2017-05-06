@@ -101,7 +101,7 @@ def main():
             d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
             search_im.save(os.path.join(out_dir, search_frame_name))
 
-            visualize_corr_maps(vgg, os.path.join(heat_dir, search_frame_name), key_key_frame_np, search_frame_np, key_bb, search_bb)
+            visualize_corr_maps(vgg, os.path.join(heat_dir, search_frame_name), key_frame_np, search_frame_np, key_bb, search_bb)
 
             total_frames += 1
 
