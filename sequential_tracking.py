@@ -39,6 +39,8 @@ def main():
         num_frames = len(ground_truth)
         out_dir = os.path.join(output_dir, cat)
         heat_dir = os.path.join(out_dir, 'heatmaps/')
+        if not os.path.exists(heat_dir):
+            os.makedirs(heat_dir)
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
