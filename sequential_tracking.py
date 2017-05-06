@@ -14,6 +14,7 @@ from CONSTANTS import *
 #import vgg19_tracker as vgg19
 import full_tracker as vgg19        # Full resolution (slow) tracker
 import vot_preprocess as vp
+from train_vgg_tracker import visualize_corr_maps
 
 key_frame_name = '00000001.jpg'
 output_dir = 'frames/'
@@ -36,12 +37,14 @@ def main():
         cat_dir = os.path.join(VOT_DIR, cat)
         ground_truth = open(os.path.join(cat_dir, 'groundtruth.txt')).readlines()
         num_frames = len(ground_truth)
+        out_dir = os.path.join(output_dir, cat)
+        heat_dir = os.path.join(out_dir, 'heatmaps/')
 
         key_im = Image.open(os.path.join(cat_dir, key_frame_name))
         x, y, w, h = vp.convert_to_xywh(ground_truth[0])
         d = ImageDraw.Draw(key_im)
         d.rectangle([x, y, x + w, y + h], outline='green')
-        key_im.save(output_dir + key_frame_name)
+        key_im.save(os.path.join(out_dir, key_frame_name))
 
         key_frame, scale = vp.extract_key_frame(key_im, x, y, w, h)
         key_frame_np = PIL_to_np(key_frame, KEY_FRAME_SIZE)
@@ -96,7 +99,9 @@ def main():
 
             d = ImageDraw.Draw(search_im)
             d.rectangle([prev_x, prev_y, prev_x + w, prev_y + h], outline='red')
-            search_im.save(output_dir + search_frame_name)
+            search_im.save(os.path.join(out_dir, search_frame_name))
+
+            visualize_corr_maps(vgg, os.path.join(heat_dir, search_frame_name), key_key_frame_np, search_frame_np, key_bb, search_bb)
 
             total_frames += 1
 
