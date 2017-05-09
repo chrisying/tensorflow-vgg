@@ -202,7 +202,8 @@ class Vgg19:
                 (COMP_COST_FACTOR * 4) * self.conf4 +
                 (COMP_COST_FACTOR * 5) * self.conf5)
         #self.soft_loss = self.weighted_softmax_loss(self.ground_truth, self.soft_prediction)
-        self.gated_loss = self.soft_loss + LAMBDA * self.comp_loss
+        #self.gated_loss = self.soft_loss + LAMBDA * self.comp_loss
+        self.gated_loss = self.soft_loss
 
         self.soft_prediction = (tf.reshape(self.conf1, [-1,1,1,1]) * self.rcorr1 +
                                 tf.reshape(self.conf2, [-1,1,1,1]) * self.rcorr2 +
