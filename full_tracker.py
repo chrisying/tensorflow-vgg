@@ -175,10 +175,10 @@ class Vgg19:
 
         #self.raw_prediction = self.rcorr5
         self.raw_prediction = (1.0 * self.rcorr1 +
-                               1.0 * self.rcorr2 +
-                               1.0 * self.rcorr3 +
-                               1.0 * self.rcorr4 +
-                               1.0 * self.rcorr5) + self.generate_prior_gaussian()
+                               2.0 * self.rcorr2 +
+                               4.0 * self.rcorr3 +
+                               8.0 * self.rcorr4 +
+                               16.0 * self.rcorr5) + self.generate_prior_gaussian()
 
         # Soft loss for gating
         self.soft_loss1 = self.weighted_softmax_loss(self.ground_truth, self.rcorr1, self.conf1)
