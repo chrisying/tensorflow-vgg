@@ -16,6 +16,8 @@ BATCH_SIZE = 25
 EPSILON = 1e-5      # small value to prevdent divide by 0
 GAUSSIAN_AMP = 1
 GAUSSIAN_VAR = 20
+PRIOR_AMP = 0.5
+PRIOR_VAR = 100
 LAMBDA = 1.0       # [0.0, 1.0], higher = more weight to computational cost
 FINETUNE_LR = 1e-7
 GATE_LR = 1e-3

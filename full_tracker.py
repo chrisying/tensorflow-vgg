@@ -178,7 +178,7 @@ class Vgg19:
                                1.0 * self.rcorr2 +
                                1.0 * self.rcorr3 +
                                1.0 * self.rcorr4 +
-                               1.0 * self.rcorr5)
+                               1.0 * self.rcorr5) + self.generate_prior_gaussian()
 
         # Soft loss for gating
         self.soft_loss1 = self.weighted_softmax_loss(self.ground_truth, self.rcorr1, self.conf1)
@@ -500,6 +500,13 @@ class Vgg19:
 
         grounds = tf.map_fn(bb_to_gaussian, elems=bbs, dtype=tf.float32, back_prop=False)
         return tf.reshape(grounds, [-1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1])
+
+    def generate_prior_gaussian(self):
+        x = tf.range(-SEARCH_FRAME_SIZE / 2, limit=SEARCH_FRAME_SIZE / 2, dtype=tf.float32)
+        xs, ys = tf.meshgrid(x, x)
+        gaus = PRIOR_AMP * tf.exp(-(xs**2 + ys**2) / (2 * PRIOR_VAR))
+
+        return tf.reshape(gaus, [1, SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE, 1])
 
     def softmax_loss(self, ground_truth, prediction):
         shape = ground_truth.get_shape().as_list()  # [None, 256, 256, 1]
