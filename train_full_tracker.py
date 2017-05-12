@@ -15,8 +15,8 @@ import full_tracker as vgg19
 from CONSTANTS import *
 
 # Uncomment the MODE to run (finetune = train VGG weights, gating = train gate vars)
-#MODE = 'finetune'
-MODE = 'gating'
+MODE = 'finetune'
+#MODE = 'gating'
 
 def load_batch(category, key_name):
     data_dir = os.path.join(PROCESSED_DIR, category, key_name)

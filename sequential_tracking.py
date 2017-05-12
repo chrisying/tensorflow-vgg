@@ -14,7 +14,7 @@ from CONSTANTS import *
 #import vgg19_tracker as vgg19
 import full_tracker as vgg19        # Full resolution (slow) tracker
 import vot_preprocess as vp
-from train_vgg_tracker import visualize_corr_maps
+from train_full_tracker import visualize_corr_maps
 
 key_frame_name = '00000001.jpg'
 output_dir = 'frames/'
