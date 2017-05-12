@@ -31,6 +31,7 @@ def main():
 
     vgg = vgg19.Vgg19(weights_file)
     total_frames = 0
+    iou_sum = 0.0
 
     start = time.time()
     for cat in TEST_CATS:
@@ -87,6 +88,7 @@ def main():
                                vgg.key_bb: key_bb,
                                vgg.search_bb: search_bb})
             #pred_box = vgg.sequential_gated_tracking(key_frame_np, search_frame_np, key_bb, search_bb)
+            iou_sum += iou
 
             print 'Frame %d IOU %.5f' % (frame_idx, iou)
 
@@ -108,7 +110,7 @@ def main():
             total_frames += 1
 
     dur = time.time() - start
-    print 'Elapsed time: %d sec, frame considered: %d, FPS: %.5f' % (dur, total_frames, total_frames / float(dur))
+    print 'Elapsed time: %d sec, frame considered: %d, FPS: %.5f, average IOU: %.5f' % (dur, total_frames, total_frames / float(dur), iou_sum / total_frames)
 
 
 if __name__ == '__main__':
