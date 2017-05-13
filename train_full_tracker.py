@@ -237,7 +237,8 @@ def main():
                 continue
 
             if MODE == 'finetune':
-                loss, iou1, iou5, iou25 = vgg.train_finetune(key, search, key_bb, search_bb)
+                #loss, iou1, iou5, iou25 = vgg.train_finetune(key, search, key_bb, search_bb)
+                loss, iou1, iou5, iou25 = vgg.train_combine_layer(key, search, key_bb, search_bb)
             else:
                 assert(MODE == 'gating')
                 loss, iou1, iou5, iou25 = vgg.train_gate(key, search, key_bb, search_bb)

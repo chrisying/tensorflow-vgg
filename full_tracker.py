@@ -139,6 +139,14 @@ class Vgg19:
         self.rcorr4 = tf.image.resize_nearest_neighbor(self.corr4, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
         self.rcorr5 = tf.image.resize_nearest_neighbor(self.corr5, (SEARCH_FRAME_SIZE, SEARCH_FRAME_SIZE))
 
+        # Concated cross-correlations
+        self.rcorr_concat = tf.concat([self.rcorr1, self.rcorr2, self.rcorr3, self.rcorr4, self.rcorr5], axis=3)
+        self.combine_filters = self.get_var('combine', [5,5,5,1], 0, 'combine_filters')
+        self.combine_biases = self.get_var('combine', [1], 1, 'combine_biases')
+        self.combine_conv = tf.nn.conv2d(self.rcorr_concat, self.combine_filters, [1,1,1,1], padding='SAME')
+        self.combine_bias = tf.nn.bias_add(self.combine_conv, self.combine_biases)
+        self.raw_prediction = self.combine_bias
+
         # Gating feature vectors from pre-resized feature maps
         # TODO: don't hardcode 2**4
         self.gate1 = self.extract_corr_features(self.corr1, SEARCH_FRAME_SIZE / 2 ** 1, 1)
@@ -166,19 +174,20 @@ class Vgg19:
         self.ground_truth = self.generate_ground_gaussian(self.search_bb)
 
         # Raw loss for finetuning
-        self.raw_loss1 = self.softmax_loss(self.ground_truth, self.rcorr1)
-        self.raw_loss2 = self.softmax_loss(self.ground_truth, self.rcorr2)
-        self.raw_loss3 = self.softmax_loss(self.ground_truth, self.rcorr3)
-        self.raw_loss4 = self.softmax_loss(self.ground_truth, self.rcorr4)
-        self.raw_loss5 = self.softmax_loss(self.ground_truth, self.rcorr5)
-        self.raw_loss = self.raw_loss1 + self.raw_loss2 + self.raw_loss3 + self.raw_loss4 + self.raw_loss5
+        #self.raw_loss1 = self.softmax_loss(self.ground_truth, self.rcorr1)
+        #self.raw_loss2 = self.softmax_loss(self.ground_truth, self.rcorr2)
+        #self.raw_loss3 = self.softmax_loss(self.ground_truth, self.rcorr3)
+        #self.raw_loss4 = self.softmax_loss(self.ground_truth, self.rcorr4)
+        #self.raw_loss5 = self.softmax_loss(self.ground_truth, self.rcorr5)
+        #self.raw_loss = self.raw_loss1 + self.raw_loss2 + self.raw_loss3 + self.raw_loss4 + self.raw_loss5
+        self.raw_loss = self.softmax_loss(self.ground_truth, self.raw_prediction)
 
         #self.raw_prediction = self.rcorr5
-        self.raw_prediction = (1.0 * self.rcorr1 +
-                               2.0 * self.rcorr2 +
-                               4.0 * self.rcorr3 +
-                               8.0 * self.rcorr4 +
-                               16.0 * self.rcorr5) + self.generate_prior_gaussian()
+        #self.raw_prediction = (1.0 * self.rcorr1 +
+        #                       2.0 * self.rcorr2 +
+        #                       4.0 * self.rcorr3 +
+        #                       8.0 * self.rcorr4 +
+        #                       16.0 * self.rcorr5) + self.generate_prior_gaussian()
 
         # Soft loss for gating
         self.soft_loss1 = self.weighted_softmax_loss(self.ground_truth, self.rcorr1, self.conf1)
@@ -233,6 +242,7 @@ class Vgg19:
         # TODO: experiment with LR decay?
         self.train_finetune_op = tf.train.AdamOptimizer(FINETUNE_LR).minimize(self.raw_loss, var_list=self.cnn_var_list)
         self.train_gate_op = tf.train.AdamOptimizer(GATE_LR).minimize(self.gated_loss, var_list=self.gate_var_list)
+        self.train_combine_op = tf.train.AdamOptimizer(1e-3).minimize(self.raw_loss, var_list=[self.combine_filters, self.combine_biases])
 
         # Tensorboard summaries
         self.raw_loss_summary = tf.summary.scalar('raw_loss', self.raw_loss)
@@ -320,6 +330,18 @@ class Vgg19:
         self.iter_num += 1
 
         return loss, iou1, iou5, iou25
+
+    def train_combine_layer(self, key_img, search_img, key_bb, search_bb):
+        _, loss, iou1, iou5, iou25 = self.sess.run([
+            self.train_combine_op, self.raw_loss, self.raw_IOU_at_1, self.raw_IOU_at_5, self.raw_IOU_full],
+            feed_dict={
+                self.key_img: key_img,
+                self.search_img: search_img,
+                self.key_bb: key_bb,
+                self.search_bb: search_bb})
+
+        return loss, iou1, iou5, iou25
+
 
     def validation_raw(self, key_img, search_img, key_bb, search_bb):
         loss, iou1, iou5, iou25  = self.sess.run([
