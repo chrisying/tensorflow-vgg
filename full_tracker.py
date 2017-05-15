@@ -145,7 +145,8 @@ class Vgg19:
         self.combine_biases = self.get_var('combine', [1], 1, 'combine_biases')
         self.combine_conv = tf.nn.conv2d(self.rcorr_concat, self.combine_filters, [1,1,1,1], padding='SAME')
         self.combine_bias = tf.nn.bias_add(self.combine_conv, self.combine_biases)
-        self.raw_prediction = self.combine_bias
+        self.combine_normal = self.combine_bias / tf.reduce_sum(self.combine_bias, axis=[1,2], keep_dims=True)
+        self.raw_prediction = self.combine_normal
 
         # Gating feature vectors from pre-resized feature maps
         # TODO: don't hardcode 2**4
